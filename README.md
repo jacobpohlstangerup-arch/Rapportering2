@@ -1,4 +1,3 @@
-# Rapportering2
 <!DOCTYPE html>
 <html lang="da">
 <head>
@@ -209,12 +208,6 @@ td.sum-var{text-align:right;font-family:'DM Mono',monospace;font-weight:600;}
   <div class="grant-bar" id="grant-bar">
     <div class="gfield"><label id="lbl-gProj">Projekttitel</label>
       <input type="text" id="g-proj" oninput="onProj(this.value)" placeholder="Projektets titel"/></div>
-    <div class="gfield"><label id="lbl-gFunder">Bevillingsgiver</label>
-      <input type="text" id="g-funder" placeholder="Fondens navn"/></div>
-    <div class="gfield"><label id="lbl-gRef">Journalnummer</label>
-      <input type="text" id="g-ref" placeholder="Ref./j.nr."/></div>
-    <div class="gfield"><label id="lbl-gGranted">Bevilget beløb (DKK)</label>
-      <input type="number" class="num" id="g-granted" step="1000" placeholder="0" oninput="granted=parseFloat(this.value)||0;updateAll()"/></div>
     <div class="gfield"><label id="lbl-gFrom">Periode fra</label>
       <input type="text" id="g-from" placeholder="01.01.2026"/></div>
     <div class="gfield"><label id="lbl-gTo">Periode til</label>
@@ -228,19 +221,17 @@ td.sum-var{text-align:right;font-family:'DM Mono',monospace;font-weight:600;}
     <div class="config-sep"></div>
     <label id="lbl-oh">Overhead (%)</label>
     <input type="number" id="oh-inp" value="0" min="0" max="100" step="0.5" style="width:55px" oninput="overheadPct=parseFloat(this.value)||0;updateAll()"/>
-    <div class="config-sep"></div>
-    <label id="lbl-acc">Regnskabsansvarlig</label>
-    <input type="text" id="g-signer" placeholder="Navn" style="width:160px;font-family:'DM Sans',sans-serif;text-align:left"/>
   </div>
 
   <div class="summary-grid" id="summary-grid"></div>
+
+  <div class="cofin-panel" id="cofin-panel"></div>
+
   <div class="sections-wrap" id="sections-wrap"></div>
 
   <button class="icon-btn ghost" onclick="addSection()" style="width:100%;justify-content:center;padding:11px;border:2px dashed var(--border2);border-radius:var(--radius-xl);margin-bottom:1.25rem">
     <i class="ti ti-plus"></i> <span id="lbl-addCat">Tilføj kategori</span>
   </button>
-
-  <div class="cofin-panel" id="cofin-panel"></div>
 
   <div class="recon" id="recon"></div>
 </div>
@@ -256,32 +247,29 @@ const T={
     impTitle:'Importer budget',
     impDesc:'Indsæt del-linket fra budgetværktøjet, så overføres alle kategorier og budgettal automatisk.',
     impBtn:'Importer', impBlank:'Start tomt',
-    gProj:'Projekttitel', gFunder:'Bevillingsgiver', gRef:'Journalnummer',
-    gGranted:'Bevilget beløb (DKK)', gFrom:'Periode fra', gTo:'Periode til',
-    eur:'1 EUR =', oh:'Overhead (%)', acc:'Regnskabsansvarlig',
+    gProj:'Projekttitel', gFrom:'Periode fra', gTo:'Periode til',
+    eur:'1 EUR =', oh:'Overhead (%)',
     addCat:'Tilføj kategori', addRow:'Tilføj post',
     sub:'Underkategori', desc:'Beskrivelse', inst:'Institution',
     budget:'Budget', actual:'Forbrug', variance:'Afvigelse',
     total:'I alt', yr:y=>'År '+y, subtotal:'Subtotal',
     sumBudget:'Budgetteret', sumActual:'Forbrugt', sumVar:'Afvigelse',
     sumRemaining:'Restbeløb', overhead:'Overhead',
-    cofinTitle:'Medfinansiering', cofinSource:'Finansieringskilde',
-    cofinStatus:'Status', cofinSubtotal:'Medfinansiering i alt',
-    cofinAdd:'Tilføj finansieringskilde', cofinNone:'Ingen medfinansiering registreret',
+    cofinTitle:'Bevillinger og finansiering', cofinSource:'Bevillingsgiver',
+    cofinRef:'Journalnr.', cofinStatus:'Status', cofinSubtotal:'Finansiering i alt',
+    cofinAdd:'Tilføj bevillingsgiver', cofinNone:'Ingen bevillingsgivere registreret',
     stGranted:'Modtaget', stPending:'Tilsagn', stExpected:'Forventet',
     reconTitle:'Afstemning',
-    rGranted:'Bevilget beløb', rCofin:'Medfinansiering', rAvailable:'Midler til rådighed',
+    rFunding:'Finansiering i alt', rAvailable:'Midler til rådighed',
     rSpent:'Forbrug i alt', rOverhead:'Overhead', rRemaining:'Restbeløb',
-    rRepay:'Tilbagebetales', rOverspend:'Merforbrug',
+    rOverspend:'Merforbrug', sumFunding:'Finansiering',
     reconNoteOk:'Restbeløbet er uforbrugte midler pr. regnskabsdatoen.',
     reconNoteOver:'Forbruget overstiger de tilgængelige midler. Merforbruget er dækket af egne midler.',
     delCat:'Slet denne kategori og alle dens poster?',
     newCat:'Ny kategori', newRow:'Ny post',
     linkCopied:'Link kopieret', copyLink:'Kopiér link',
     impOk:'Budget importeret', impFail:'Kunne ikke læse linket — kontrollér at det er et del-link fra budgetværktøjet',
-    statement:'Undertegnede erklærer, at regnskabet er aflagt i overensstemmelse med bevillingens formål og vilkår, og at de anførte udgifter er afholdt i projektet.',
-    sigDate:'Dato', sigName:'Regnskabsansvarlig', sigSign:'Underskrift',
-    period:'Regnskabsperiode', funder:'Bevillingsgiver', ref:'Journalnr.',
+    period:'Regnskabsperiode',
     pctUsed:'forbrugt',
   },
   en:{
@@ -291,32 +279,29 @@ const T={
     impTitle:'Import budget',
     impDesc:'Paste the share link from the budget tool and all categories and figures transfer automatically.',
     impBtn:'Import', impBlank:'Start blank',
-    gProj:'Project title', gFunder:'Funder', gRef:'Grant reference',
-    gGranted:'Amount granted (DKK)', gFrom:'Period from', gTo:'Period to',
-    eur:'1 EUR =', oh:'Overhead (%)', acc:'Responsible for accounts',
+    gProj:'Project title', gFrom:'Period from', gTo:'Period to',
+    eur:'1 EUR =', oh:'Overhead (%)',
     addCat:'Add category', addRow:'Add line',
     sub:'Subcategory', desc:'Description', inst:'Institution',
     budget:'Budget', actual:'Spent', variance:'Variance',
     total:'Total', yr:y=>'Year '+y, subtotal:'Subtotal',
     sumBudget:'Budgeted', sumActual:'Spent', sumVar:'Variance',
     sumRemaining:'Remaining', overhead:'Overhead',
-    cofinTitle:'Co-financing', cofinSource:'Funding source',
-    cofinStatus:'Status', cofinSubtotal:'Total co-financing',
-    cofinAdd:'Add funding source', cofinNone:'No co-financing recorded',
+    cofinTitle:'Grants and funding', cofinSource:'Funder',
+    cofinRef:'Grant ref.', cofinStatus:'Status', cofinSubtotal:'Total funding',
+    cofinAdd:'Add funder', cofinNone:'No funders recorded',
     stGranted:'Received', stPending:'Committed', stExpected:'Expected',
     reconTitle:'Reconciliation',
-    rGranted:'Amount granted', rCofin:'Co-financing', rAvailable:'Funds available',
+    rFunding:'Total funding', rAvailable:'Funds available',
     rSpent:'Total spent', rOverhead:'Overhead', rRemaining:'Remaining balance',
-    rRepay:'To be repaid', rOverspend:'Overspend',
+    rOverspend:'Overspend', sumFunding:'Funding',
     reconNoteOk:'The remaining balance is unspent funds as at the reporting date.',
     reconNoteOver:'Spending exceeds available funds. The overspend is covered by own resources.',
     delCat:'Delete this category and all its lines?',
     newCat:'New category', newRow:'New line',
     linkCopied:'Link copied', copyLink:'Copy link',
     impOk:'Budget imported', impFail:'Could not read the link - check that it is a share link from the budget tool',
-    statement:'The undersigned confirms that these accounts have been prepared in accordance with the purpose and terms of the grant, and that the costs stated were incurred by the project.',
-    sigDate:'Date', sigName:'Responsible for accounts', sigSign:'Signature',
-    period:'Reporting period', funder:'Funder', ref:'Grant ref.',
+    period:'Reporting period',
     pctUsed:'used',
   }
 };
@@ -325,7 +310,7 @@ const T={
 //  STATE
 // ════════════════════════════════════════════════════
 let lang='da', currency='DKK', eurRate=7.4728, numYears=1;
-let overheadPct=0, granted=0;
+let overheadPct=0;
 let categories=[], coFin=[], collapsed={}, coFinCollapsed=false;
 
 const CAT_COLORS=['#185FA5','#0F6E56','#854F0B','#5F5E5A','#534AB7','#7B2D8B','#C0392B','#1A7A4A'];
@@ -342,7 +327,7 @@ function mkRow(label,inst){
 function mkCat(label,color){
   return {id:uid(),label:label||'',color:color||CAT_COLORS[0],desc:'',rows:[]};
 }
-function mkCoFin(){return {id:uid(),source:'',status:'granted',amounts:{}};}
+function mkCoFin(){return {id:uid(),source:'',ref:'',status:'granted',amounts:{}};}
 
 // ════════════════════════════════════════════════════
 //  FORMAT  (UI uses rich glyphs; PDF has its own ASCII path)
@@ -390,7 +375,7 @@ function coFinTot(){ let t=0; coFin.forEach(cf=>yrs().forEach(y=>t+=cf.amounts[y
 function coFinY(y){ let t=0; coFin.forEach(cf=>t+=cf.amounts[y]||0); return t; }
 function coFinRowTot(cf){ let t=0; yrs().forEach(y=>t+=cf.amounts[y]||0); return t; }
 
-function available(){ return granted + coFinTot(); }
+function available(){ return coFinTot(); }
 function spentTotal(){ return totAct() + ohAct(); }
 function remaining(){ return available() - spentTotal(); }
 
@@ -418,8 +403,8 @@ function setLang(l){
     'ttl-main':'ttlMain','ttl-badge':'ttlBadge','hdr-sub':'hdrSub',
     'lbl-pdf':'pdfLbl','lbl-share':'shareLbl',
     'lbl-impTitle':'impTitle','lbl-impDesc':'impDesc','lbl-impBtn':'impBtn','lbl-impBlank':'impBlank',
-    'lbl-gProj':'gProj','lbl-gFunder':'gFunder','lbl-gRef':'gRef','lbl-gGranted':'gGranted',
-    'lbl-gFrom':'gFrom','lbl-gTo':'gTo','lbl-eur':'eur','lbl-oh':'oh','lbl-acc':'acc',
+    'lbl-gProj':'gProj','lbl-gFrom':'gFrom','lbl-gTo':'gTo',
+    'lbl-eur':'eur','lbl-oh':'oh',
     'lbl-addCat':'addCat',
   };
   Object.entries(map).forEach(([id,k])=>{
@@ -505,22 +490,21 @@ function applyBudgetState(s){
     };
   }).filter(c=>c.rows.length>0);
 
+  // Any co-financing recorded in the budget carries over as a funder row.
   const srcCf = compact ? (s.cf||[]) : (s.coFin||[]);
   coFin = srcCf.map(x=>({
     id: uid(),
     source: (compact ? x.s : x.source) || '',
+    ref: '',
     status: (compact ? x.st : x.status) || 'granted',
     amounts: (compact ? x.a : x.amounts) || {},
   }));
 
-  // Default the granted amount to budget incl. overhead minus co-financing
-  const gt = totBud();
-  granted = Math.round(gt*(1+overheadPct/100)) - coFinTot();
-  if(granted<0) granted=0;
+  // Seed one blank funder row so the amount granted can be entered straight away
+  if(coFin.length===0) coFin.push(mkCoFin());
 
   // Sync the UI controls
   document.getElementById('g-proj').value=projTitle; onProj(projTitle);
-  document.getElementById('g-granted').value=granted||'';
   document.getElementById('eur-inp').value=eurRate;
   document.getElementById('oh-inp').value=overheadPct;
   document.querySelectorAll('#year-btns .pill').forEach(p=>p.classList.toggle('active',+p.dataset.y===numYears));
@@ -529,6 +513,7 @@ function applyBudgetState(s){
 }
 
 function startBlank(){
+  if(coFin.length===0) coFin.push(mkCoFin());
   categories=[
     {...mkCat(lang==='da'?'Løn':'Salary','#185FA5'), rows:[mkRow(lang==='da'?'Ny post':'New line','Rigshospitalet')]},
   ];
@@ -669,13 +654,15 @@ function buildCoFin(){
     h+=`<div style="padding:18px;text-align:center;color:var(--text3);font-size:12px">${T[lang].cofinNone}</div>`;
   } else {
     h+=`<div class="tbl-wrap"><table><thead><tr>
-      <th style="min-width:190px">${T[lang].cofinSource}</th>
+      <th style="min-width:200px">${T[lang].cofinSource}</th>
+      <th style="width:120px">${T[lang].cofinRef}</th>
       <th style="width:110px">${T[lang].cofinStatus}</th>`;
     yr.forEach(y=>{ h+=`<th class="r" style="min-width:110px">${T[lang].yr(y)}</th>`; });
     h+=`<th class="r" style="min-width:100px">${T[lang].total}</th><th style="width:30px"></th></tr></thead><tbody>`;
     coFin.forEach(cf=>{
       h+=`<tr class="data-row">
-        <td><input class="text-inp" type="text" value="${esc(cf.source)}" onchange="setCfSource('${cf.id}',this.value)"/></td>
+        <td><input class="text-inp" type="text" placeholder="${T[lang].cofinSource}" value="${esc(cf.source)}" onchange="setCfSource('${cf.id}',this.value)"/></td>
+        <td><input class="text-inp desc-inp" style="font-style:normal" type="text" placeholder="${T[lang].cofinRef}" value="${esc(cf.ref||'')}" onchange="setCfRef('${cf.id}',this.value)"/></td>
         <td><select class="inst-badge" style="border:1px solid var(--border2);cursor:pointer" onchange="setCfStatus('${cf.id}',this.value)">
           ${COFIN_STATUS.map(s=>`<option value="${s}"${cf.status===s?' selected':''}>${stLabel(s)}</option>`).join('')}
         </select></td>`;
@@ -685,7 +672,7 @@ function buildCoFin(){
       h+=`<td class="sum-act" id="cft_${cf.id}">${fmtCur(coFinRowTot(cf))}</td>
         <td style="text-align:center"><button class="icon-btn danger" style="padding:2px 5px" onclick="delCf('${cf.id}')"><i class="ti ti-x"></i></button></td></tr>`;
     });
-    h+=`<tr class="cofin-subtotal"><td colspan="2" style="font-weight:700;padding-left:9px">${T[lang].cofinSubtotal}</td>`;
+    h+=`<tr class="cofin-subtotal"><td colspan="3" style="font-weight:700;padding-left:9px">${T[lang].cofinSubtotal}</td>`;
     yr.forEach(y=>{ h+=`<td class="mc" id="cfy_${y}"></td>`; });
     h+=`<td class="mc" id="cf-tot"></td><td></td></tr>`;
     h+='</tbody></table></div>';
@@ -711,11 +698,12 @@ function updateAll(){
   // Summary cards
   const sg=document.getElementById('summary-grid'); sg.innerHTML='';
   const pct = grandBud>0 ? (grandAct/grandBud*100) : 0;
+  const nF=coFin.filter(x=>coFinRowTot(x)>0).length;
   const cards=[
+    {cls:'accent-spent',  lbl:T[lang].sumFunding, val:fmtCur(cf),
+     sub:nF>0?(nF+' '+(lang==='da'?(nF===1?'bevillingsgiver':'bevillingsgivere'):(nF===1?'funder':'funders'))):''},
     {cls:'accent-budget', lbl:T[lang].sumBudget, val:fmtCur(grandBud), sub:''},
     {cls:'accent-spent',  lbl:T[lang].sumActual, val:fmtCur(grandAct), sub:fmtPct(pct)+' '+T[lang].pctUsed},
-    {cls:(grandBud-grandAct)<0?'accent-var-over':'accent-var-ok', lbl:T[lang].sumVar,
-     val:varText(grandBud-grandAct), sub:''},
     {cls:rem<0?'accent-var-over':'accent-var-ok', lbl:T[lang].sumRemaining, val:fmtCur(rem), sub:''},
   ];
   cards.forEach(c=>{
@@ -765,10 +753,19 @@ function buildRecon(grandAct, cf, avail, rem, oa){
   const el=document.getElementById('recon');
   const over = rem < 0;
   let h=`<h3>${T[lang].reconTitle}</h3>`;
-  h+=`<div class="rr"><span class="rl">${T[lang].rGranted}</span><span class="rv">${fmtCur(granted)}</span></div>`;
-  if(cf>0) h+=`<div class="rr"><span class="rl">+ ${T[lang].rCofin}</span><span class="rv">${fmtCur(cf)}</span></div>`;
-  h+=`<div class="rr-div"></div>`;
-  h+=`<div class="rr"><span class="rl">${T[lang].rAvailable}</span><span class="rv">${fmtCur(avail)}</span></div>`;
+
+  // Every funder on its own line, so the reader can see where each krone came from
+  const active=coFin.filter(x=>coFinRowTot(x)>0);
+  if(active.length){
+    active.forEach(f=>{
+      const name=f.source||(lang==='da'?'(uden navn)':'(unnamed)');
+      const tag=f.ref?` <span style="color:var(--text3);font-weight:400">· ${esc(f.ref)}</span>`:'';
+      const st=f.status!=='granted'?` <span style="color:var(--text3);font-weight:400">(${stLabel(f.status)})</span>`:'';
+      h+=`<div class="rr"><span class="rl">${esc(name)}${tag}${st}</span><span class="rv">${fmtCur(coFinRowTot(f))}</span></div>`;
+    });
+    h+=`<div class="rr-div"></div>`;
+  }
+  h+=`<div class="rr"><span class="rl" style="font-weight:600">${T[lang].rFunding}</span><span class="rv">${fmtCur(avail)}</span></div>`;
   h+=`<div class="rr-div"></div>`;
   h+=`<div class="rr"><span class="rl">- ${T[lang].rSpent}</span><span class="rv">${fmtCur(totAct())}</span></div>`;
   if(oa>0) h+=`<div class="rr"><span class="rl">- ${T[lang].rOverhead} (${overheadPct} %)</span><span class="rv">${fmtCur(oa)}</span></div>`;
@@ -812,7 +809,8 @@ function toggleCoFin(){
 }
 function addCf(){ coFin.push(mkCoFin()); buildCoFin(); updateAll(); }
 function delCf(id){ coFin=coFin.filter(c=>c.id!==id); buildCoFin(); updateAll(); }
-function setCfSource(id,v){ const c=coFin.find(x=>x.id===id); if(c) c.source=v; }
+function setCfSource(id,v){ const c=coFin.find(x=>x.id===id); if(c) c.source=v; updateAll(); }
+function setCfRef(id,v){ const c=coFin.find(x=>x.id===id); if(c) c.ref=v; }
 function setCfStatus(id,v){ const c=coFin.find(x=>x.id===id); if(c) c.status=v; }
 function setCfAmt(id,y,v){ const c=coFin.find(x=>x.id===id); if(c){ c.amounts[y]=parseFloat(v)||0; updateAll(); } }
 
@@ -886,11 +884,8 @@ function exportPDF(){
 
   // ── Page header ──
   const proj   = document.getElementById('g-proj').value||'';
-  const funder = document.getElementById('g-funder').value||'';
-  const ref    = document.getElementById('g-ref').value||'';
   const pFrom  = document.getElementById('g-from').value||'';
   const pTo    = document.getElementById('g-to').value||'';
-  const signer = document.getElementById('g-signer').value||'';
   const today  = new Date().toLocaleDateString(isDa?'da-DK':'en-GB');
 
   doc.setFillColor(...TEAL); doc.rect(0,0,PAGE_W,20,'F');
@@ -909,10 +904,9 @@ function exportPDF(){
 
   // ── Grant details strip ──
   const info=[];
-  if(funder) info.push([T[lang].funder, funder]);
-  if(ref)    info.push([T[lang].ref, ref]);
   if(pFrom||pTo) info.push([T[lang].period, (pFrom||'')+(pTo?(' - '+pTo):'')]);
-  info.push([T[lang].rGranted, pfmt(granted)]);
+  info.push([T[lang].rFunding, pfmt(available())]);
+  info.push([T[lang].sumActual, pfmt(totAct()+ohAct())]);
   if(info.length){
     doc.autoTable({
       body:[info.map(([k,v])=>({content:pdfTxt(k+': ')+pdfTxt(v),
@@ -1067,6 +1061,7 @@ function exportPDF(){
     y+=7;
 
     const ch=[[{content:T[lang].cofinSource,styles:{halign:'left'}},
+               {content:T[lang].cofinRef,styles:{halign:'left'}},
                {content:T[lang].cofinStatus,styles:{halign:'center'}}]];
     yr.forEach(yy=>ch[0].push({content:T[lang].yr(yy),styles:{halign:'right',fillColor:[197,229,211],textColor:GREEN}}));
     ch[0].push({content:T[lang].total,styles:{halign:'right'}});
@@ -1074,12 +1069,13 @@ function exportPDF(){
     const cbody=[];
     cfRows.forEach(c=>{
       const row=[{content:c.source||'-',styles:{halign:'left'}},
+                 {content:c.ref||'',styles:{halign:'left',textColor:GREY}},
                  {content:stLabel(c.status),styles:{halign:'center'}}];
       yr.forEach(yy=>row.push({content:(c.amounts[yy]||0)>0?pfmt(c.amounts[yy]):'-',styles:{halign:'right'}}));
       row.push({content:pfmt(coFinRowTot(c)),styles:{halign:'right',fontStyle:'bold'}});
       cbody.push(row);
     });
-    const cs=[{content:T[lang].cofinSubtotal,colSpan:2,
+    const cs=[{content:T[lang].cofinSubtotal,colSpan:3,
       styles:{fontStyle:'bold',fillColor:[197,229,211],textColor:GREEN,halign:'left'}}];
     yr.forEach(yy=>cs.push({content:pfmt(coFinY(yy)),
       styles:{fontStyle:'bold',fillColor:[197,229,211],halign:'right',textColor:GREEN}}));
@@ -1087,13 +1083,15 @@ function exportPDF(){
       styles:{fontStyle:'bold',fillColor:[197,229,211],halign:'right',textColor:GREEN}});
     cbody.push(cs);
 
-    const CFS=26, CFT=34;
-    let cvw=Math.floor((W-80-CFS-CFT)/yr.length);
+    const CFS=26, CFT=36, CFR=30;
+    let cvw=Math.floor((W-90-CFS-CFT-CFR)/yr.length);
     if(cvw>40) cvw=40;
-    const cfsrc=W-CFS-CFT-cvw*yr.length;
-    const ccs={0:{cellWidth:cfsrc,halign:'left'},1:{cellWidth:CFS,halign:'center'}};
-    yr.forEach((_,i)=>ccs[i+2]={cellWidth:cvw,halign:'right'});
-    ccs[yr.length+2]={cellWidth:CFT,halign:'right',fontStyle:'bold'};
+    const cfsrc=W-CFS-CFT-CFR-cvw*yr.length;
+    const ccs={0:{cellWidth:cfsrc,halign:'left'},
+               1:{cellWidth:CFR,halign:'left',textColor:GREY},
+               2:{cellWidth:CFS,halign:'center'}};
+    yr.forEach((_,i)=>ccs[i+3]={cellWidth:cvw,halign:'right'});
+    ccs[yr.length+3]={cellWidth:CFT,halign:'right',fontStyle:'bold'};
 
     doc.autoTable({
       head:ch, body:cbody, startY:y, margin:{left:M,right:M}, tableWidth:W,
@@ -1120,9 +1118,16 @@ function exportPDF(){
   y+=7;
 
   const rb=[];
-  rb.push([{content:T[lang].rGranted,styles:{halign:'left'}},{content:pfmt(granted),styles:{halign:'right'}}]);
-  if(cfT>0) rb.push([{content:'+ '+T[lang].rCofin,styles:{halign:'left'}},{content:pfmt(cfT),styles:{halign:'right'}}]);
-  rb.push([{content:T[lang].rAvailable,styles:{halign:'left',fontStyle:'bold',fillColor:TEAL_L}},
+  // One line per funder so the reader can trace every krone to its source
+  cfRows.forEach(f=>{
+    const nm=f.source||'-';
+    const tail=[f.ref||'', f.status!=='granted'?stLabel(f.status):''].filter(Boolean).join(' - ');
+    rb.push([
+      {content:nm+(tail?('  ('+tail+')'):''),styles:{halign:'left'}},
+      {content:pfmt(coFinRowTot(f)),styles:{halign:'right'}},
+    ]);
+  });
+  rb.push([{content:T[lang].rFunding,styles:{halign:'left',fontStyle:'bold',fillColor:TEAL_L}},
            {content:pfmt(avail),styles:{halign:'right',fontStyle:'bold',fillColor:TEAL_L}}]);
   rb.push([{content:'- '+T[lang].rSpent,styles:{halign:'left'}},{content:pfmt(totAct()),styles:{halign:'right'}}]);
   if(oa>0) rb.push([{content:'- '+T[lang].rOverhead+' ('+overheadPct+' %)',styles:{halign:'left'}},
@@ -1141,22 +1146,7 @@ function exportPDF(){
     columnStyles:{0:{cellWidth:W-70,halign:'left'},1:{cellWidth:70,halign:'right'}},
     didParseCell:sanitizeCell,
   });
-  y=doc.lastAutoTable.finalY+8;
-
-  // ── Declaration + signature ──
-  if(y+32>198){ doc.addPage(); y=14; }
-  doc.setTextColor(...DARK); doc.setFontSize(8); doc.setFont(undefined,'normal');
-  const stLines=doc.splitTextToSize(pdfTxt(T[lang].statement),W-4);
-  doc.text(stLines,M+2,y);
-  y+=stLines.length*4+12;
-
-  doc.setDrawColor(...GREY); doc.setLineWidth(0.3);
-  const colW2=(W-20)/2;
-  doc.line(M+2,y,M+2+colW2-10,y);
-  doc.line(M+2+colW2+10,y,M+2+colW2*2,y);
-  doc.setFontSize(7.5); doc.setTextColor(...GREY);
-  doc.text(pdfTxt(T[lang].sigDate+' / '+T[lang].sigName+(signer?(': '+signer):'')),M+2,y+4);
-  doc.text(pdfTxt(T[lang].sigSign),M+2+colW2+10,y+4);
+  y=doc.lastAutoTable.finalY+6;
 
   // ── Page numbers ──
   const pc=doc.internal.getNumberOfPages();
@@ -1179,8 +1169,6 @@ function exportExcel(){
   const v=d=>isEUR?Math.round(d/eurRate):Math.round(d);
 
   const proj=document.getElementById('g-proj').value||'';
-  const funder=document.getElementById('g-funder').value||'';
-  const ref=document.getElementById('g-ref').value||'';
   const pFrom=document.getElementById('g-from').value||'';
   const pTo=document.getElementById('g-to').value||'';
 
@@ -1188,10 +1176,8 @@ function exportExcel(){
   const a=[];
   a.push([T[lang].ttlMain, proj]);
   a.push([isDa?'Dato':'Date', new Date().toLocaleDateString(isDa?'da-DK':'en-GB')]);
-  if(funder) a.push([T[lang].funder, funder]);
-  if(ref)    a.push([T[lang].ref, ref]);
   if(pFrom||pTo) a.push([T[lang].period, (pFrom||'')+(pTo?(' - '+pTo):'')]);
-  a.push([T[lang].rGranted+' ('+cl+')', v(granted)]);
+  a.push([T[lang].rFunding+' ('+cl+')', v(available())]);
   a.push([]);
 
   const hdr=[isDa?'Kategori':'Category', T[lang].sub, T[lang].desc, T[lang].inst];
@@ -1242,9 +1228,9 @@ function exportExcel(){
   if(cfRows.length){
     a.push([]);
     a.push([T[lang].cofinTitle.toUpperCase(),'','','']);
-    a.push([T[lang].cofinSource, T[lang].cofinStatus,'','']);
+    a.push([T[lang].cofinSource, T[lang].cofinRef, T[lang].cofinStatus,'']);
     cfRows.forEach(c=>{
-      const line=[c.source||'', stLabel(c.status),'',''];
+      const line=[c.source||'', c.ref||'', stLabel(c.status),''];
       yr.forEach(y=>{ line.push(v(c.amounts[y]||0)); line.push(''); });
       line.push(v(coFinRowTot(c)));
       a.push(line);
@@ -1258,9 +1244,11 @@ function exportExcel(){
   // Reconciliation
   a.push([]);
   a.push([T[lang].reconTitle.toUpperCase(),'']);
-  a.push([T[lang].rGranted, v(granted)]);
-  if(coFinTot()>0) a.push([T[lang].rCofin, v(coFinTot())]);
-  a.push([T[lang].rAvailable, v(available())]);
+  coFin.filter(f=>coFinRowTot(f)>0).forEach(f=>{
+    const tail=[f.ref||'', f.status!=='granted'?stLabel(f.status):''].filter(Boolean).join(' - ');
+    a.push([(f.source||'-')+(tail?('  ('+tail+')'):''), v(coFinRowTot(f))]);
+  });
+  a.push([T[lang].rFunding, v(available())]);
   a.push([T[lang].rSpent, v(totAct())]);
   if(oa>0) a.push([T[lang].rOverhead+' ('+overheadPct+' %)', v(oa)]);
   const rem=remaining();
@@ -1299,9 +1287,8 @@ function buildState(){
   return {
     v:1, l:lang==='en'?'en':undefined, c:currency==='EUR'?'EUR':undefined,
     e:eurRate!==7.4728?eurRate:undefined, n:numYears>1?numYears:undefined,
-    o:overheadPct||undefined, g:granted||undefined,
-    meta:{p:gv('g-proj')||undefined,f:gv('g-funder')||undefined,r:gv('g-ref')||undefined,
-          a:gv('g-from')||undefined,b:gv('g-to')||undefined,s:gv('g-signer')||undefined},
+    o:overheadPct||undefined,
+    meta:{p:gv('g-proj')||undefined,a:gv('g-from')||undefined,b:gv('g-to')||undefined},
     cats:categories.map(c=>({
       lb:c.label, co:c.color, ds:c.desc||undefined,
       rw:c.rows.filter(r=>rowBudTot(r)>0||rowActTot(r)>0||r.label).map(r=>({
@@ -1311,7 +1298,8 @@ function buildState(){
       })),
     })),
     cf:coFin.filter(c=>c.source||coFinRowTot(c)>0).map(c=>({
-      s:c.source||undefined, st:c.status!=='granted'?c.status:undefined,
+      s:c.source||undefined, rf:c.ref||undefined,
+      st:c.status!=='granted'?c.status:undefined,
       a:Object.fromEntries(Object.entries(c.amounts).filter(([,x])=>x>0)),
     })),
   };
@@ -1320,15 +1308,11 @@ function buildState(){
 function restoreState(s){
   lang=s.l||'da'; currency=s.c||'DKK';
   eurRate=s.e||7.4728; numYears=s.n||1;
-  overheadPct=s.o||0; granted=s.g||0;
+  overheadPct=s.o||0;
   const m=s.meta||{};
   document.getElementById('g-proj').value=m.p||'';   onProj(m.p||'');
-  document.getElementById('g-funder').value=m.f||'';
-  document.getElementById('g-ref').value=m.r||'';
   document.getElementById('g-from').value=m.a||'';
   document.getElementById('g-to').value=m.b||'';
-  document.getElementById('g-signer').value=m.s||'';
-  document.getElementById('g-granted').value=granted||'';
   document.getElementById('eur-inp').value=eurRate;
   document.getElementById('oh-inp').value=overheadPct;
   categories=(s.cats||[]).map(c=>({
@@ -1338,7 +1322,7 @@ function restoreState(s){
       budget:r.bu||{}, actual:r.ac||{},
     })),
   }));
-  coFin=(s.cf||[]).map(c=>({id:uid(),source:c.s||'',status:c.st||'granted',amounts:c.a||{}}));
+  coFin=(s.cf||[]).map(c=>({id:uid(),source:c.s||'',ref:c.rf||'',status:c.st||'granted',amounts:c.a||{}}));
   document.querySelectorAll('#year-btns .pill').forEach(p=>p.classList.toggle('active',+p.dataset.y===numYears));
   document.getElementById('btn-dkk').classList.toggle('active',currency==='DKK');
   document.getElementById('btn-eur').classList.toggle('active',currency==='EUR');
