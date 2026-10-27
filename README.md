@@ -1,1 +1,1386 @@
 # Rapportering2
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Regnskab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --bg:#F7F6F3;--surface:#FFFFFF;--surface2:#F0EFE9;
+  --text:#1C1B18;--text2:#6B6860;--text3:#A8A69E;
+  --teal:#0F5E5C;--teal-light:#E4F1F0;--teal-mid:#C2E0DE;
+  --blue:#1A56B0;--blue-light:#EBF2FD;--blue-total:#D6E4F7;
+  --green:#1A7A4A;--green-light:#E6F5ED;--green-mid:#C5E5D3;
+  --red:#C0392B;--red-light:#FDECEA;
+  --amber:#8A5A00;--amber-light:#FCF2DF;
+  --border:#E2E0D8;--border2:#C8C6BC;
+  --radius:8px;--radius-lg:12px;--radius-xl:16px;
+  --shadow:0 1px 3px rgba(0,0,0,.08);
+  font-family:'DM Sans',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.5;}
+.app{max-width:1280px;margin:0 auto;padding:1.5rem 1rem 5rem;}
+
+/* Header */
+.app-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:12px;}
+.app-title{font-size:20px;font-weight:600;letter-spacing:-.3px;display:flex;align-items:center;gap:8px;}
+.app-title .badge{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;background:var(--teal);color:#fff;padding:3px 8px;border-radius:5px;}
+.app-title small{font-size:12px;font-weight:400;color:var(--text3);display:block;margin-top:2px;}
+.header-controls{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.pill-group{display:flex;gap:2px;background:var(--surface2);border-radius:var(--radius);padding:3px;}
+.pill{padding:4px 10px;font-size:12px;font-weight:500;cursor:pointer;border:none;border-radius:6px;background:transparent;color:var(--text2);transition:all .15s;font-family:inherit;}
+.pill.active{background:var(--surface);color:var(--text);box-shadow:var(--shadow);}
+.lang-toggle{display:flex;border:1px solid var(--border2);border-radius:var(--radius);overflow:hidden;}
+.lang-btn{padding:5px 10px;cursor:pointer;border:none;background:transparent;color:var(--text2);font-family:inherit;font-weight:600;font-size:12px;}
+.lang-btn.active{background:var(--text);color:var(--bg);}
+.icon-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text);font-family:inherit;transition:all .15s;white-space:nowrap;}
+.icon-btn:hover{background:var(--surface2);}
+.icon-btn.teal{background:var(--teal);color:#fff;border-color:var(--teal);}
+.icon-btn.teal:hover{background:#0c4a48;}
+.icon-btn.ghost{border-color:transparent;background:transparent;color:var(--text2);}
+.icon-btn.ghost:hover{background:var(--surface2);color:var(--text);}
+.icon-btn.danger{color:var(--red);border-color:transparent;background:transparent;}
+.icon-btn.danger:hover{background:var(--red-light);}
+
+/* Import panel */
+.import-panel{border:2px dashed var(--teal);border-radius:var(--radius-xl);background:var(--teal-light);padding:18px;margin-bottom:1.25rem;}
+.import-panel h3{font-size:14px;font-weight:600;color:var(--teal);margin-bottom:6px;display:flex;align-items:center;gap:7px;}
+.import-panel p{font-size:12px;color:var(--text2);margin-bottom:10px;}
+.import-row{display:flex;gap:8px;flex-wrap:wrap;}
+.import-row input{flex:1;min-width:240px;font-size:12px;padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text);font-family:'DM Mono',monospace;}
+
+/* Grant info */
+.grant-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:1rem;}
+.gfield{display:flex;flex-direction:column;gap:3px;}
+.gfield label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);}
+.gfield input{font-size:13px;padding:5px 8px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;width:100%;}
+.gfield input.num{font-family:'DM Mono',monospace;text-align:right;}
+.gfield input:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 2px var(--teal-light);}
+
+/* Config bar */
+.config-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:1rem;font-size:12px;color:var(--text2);}
+.config-bar label{font-weight:500;white-space:nowrap;}
+.config-bar input{font-size:12px;padding:4px 8px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;text-align:right;}
+.config-sep{width:1px;height:20px;background:var(--border2);flex-shrink:0;}
+
+/* Summary cards */
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:1.5rem;}
+.metric{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:12px 14px;}
+.metric.accent-budget{border-left:3px solid var(--blue);}
+.metric.accent-spent{border-left:3px solid var(--teal);}
+.metric.accent-var-ok{border-left:3px solid var(--green);}
+.metric.accent-var-over{border-left:3px solid var(--red);}
+.metric-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px;font-weight:700;}
+.metric-value{font-size:16px;font-weight:600;font-family:'DM Mono',monospace;}
+.metric-sub{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:2px;}
+.metric-sub.over{color:var(--red);}
+.metric-sub.under{color:var(--green);}
+
+/* Sections */
+.sections-wrap{display:flex;flex-direction:column;gap:8px;margin-bottom:10px;}
+.section{border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;background:var(--surface);}
+.section-header{display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--surface2);cursor:pointer;user-select:none;}
+.section-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0;}
+.section-name{font-size:13px;font-weight:600;flex:1;min-width:0;}
+.section-stats{display:flex;align-items:center;gap:14px;flex-shrink:0;font-family:'DM Mono',monospace;font-size:12px;}
+.stat-pair{display:flex;flex-direction:column;align-items:flex-end;line-height:1.25;}
+.stat-pair .sl{font-family:'DM Sans',sans-serif;font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);font-weight:700;}
+.stat-pair .sv{font-weight:600;}
+.chevron{font-size:13px;color:var(--text3);transition:transform .2s;display:inline-block;}
+.chevron.open{transform:rotate(180deg);}
+.section-body{border-top:1px solid var(--border);}
+
+/* Table */
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+th{font-size:9px;font-weight:700;color:var(--text3);text-align:left;padding:6px 7px;border-bottom:1px solid var(--border);background:var(--surface2);white-space:nowrap;text-transform:uppercase;letter-spacing:.4px;}
+th.r{text-align:right;}
+th.yr-group{background:var(--blue-total);color:var(--blue);text-align:center;border-left:2px solid #A8C4E8;border-right:2px solid #A8C4E8;}
+th.tot-group{background:var(--teal-mid);color:var(--teal);text-align:center;border-left:2px solid #8FC7C4;}
+td{padding:5px 7px;border-bottom:1px solid var(--border);vertical-align:middle;color:var(--text);}
+tr:last-child td{border-bottom:none;}
+tr.data-row:hover td{background:#FAFAF8;}
+td.bud-cell{background:#F7FAFF;border-left:2px solid var(--blue-total);text-align:right;font-family:'DM Mono',monospace;}
+td.act-cell{background:#F4FAF9;border-right:2px solid var(--blue-total);text-align:right;}
+td.sum-bud{background:#F7FAFF;border-left:2px solid #8FC7C4;text-align:right;font-family:'DM Mono',monospace;font-weight:600;}
+td.sum-act{background:#F4FAF9;text-align:right;font-family:'DM Mono',monospace;font-weight:600;}
+td.sum-var{text-align:right;font-family:'DM Mono',monospace;font-weight:600;}
+.var-over{color:var(--red);}
+.var-under{color:var(--green);}
+.var-zero{color:var(--text3);}
+.num-inp{width:100%;font-size:12px;padding:2px 4px;border:1px solid transparent;border-radius:4px;background:transparent;color:var(--text);text-align:right;font-family:'DM Mono',monospace;}
+.num-inp:hover{border-color:var(--border2);background:var(--surface);}
+.num-inp:focus{outline:none;border-color:var(--teal);background:var(--surface);}
+.text-inp{width:100%;font-size:12px;padding:2px 5px;border:1px solid transparent;border-radius:4px;background:transparent;color:var(--text);font-family:'DM Sans',sans-serif;}
+.text-inp:hover{border-color:var(--border2);background:var(--surface);}
+.text-inp:focus{outline:none;border-color:var(--teal);background:var(--surface);}
+.desc-inp{font-size:11px;color:var(--text3);font-style:italic;}
+.inst-badge{font-size:10px;padding:2px 6px;border-radius:4px;background:var(--surface2);color:var(--text3);font-weight:500;white-space:nowrap;}
+.subtotal-row td{background:var(--blue-total)!important;font-weight:700;border-top:1px solid var(--border2);}
+.subtotal-row .mc{font-family:'DM Mono',monospace;text-align:right;}
+.section-foot{display:flex;align-items:center;gap:6px;padding:7px 12px;border-top:1px solid var(--border);background:var(--surface2);}
+
+/* Co-financing */
+.cofin-panel{border:1px solid #9DC9AE;border-radius:var(--radius-xl);overflow:hidden;background:var(--surface);margin-bottom:1.25rem;}
+.cofin-header{display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--green-light);cursor:pointer;user-select:none;}
+.cofin-title{font-size:13px;font-weight:600;color:#14603A;flex:1;}
+.cofin-badge{font-size:12px;font-weight:600;font-family:'DM Mono',monospace;color:#14603A;}
+.cofin-body{border-top:1px solid #9DC9AE;}
+.cofin-panel th{background:#EAF6F0;color:#14603A;}
+.cofin-subtotal td{background:var(--green-mid)!important;font-weight:700;color:#14603A;}
+.cofin-subtotal .mc{font-family:'DM Mono',monospace;text-align:right;}
+.cofin-foot{display:flex;gap:6px;padding:7px 12px;border-top:1px solid #9DC9AE;background:#EAF6F0;}
+
+/* Final reconciliation */
+.recon{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-xl);padding:16px 20px;margin-top:1.25rem;}
+.recon h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text3);margin-bottom:12px;}
+.rr{display:flex;align-items:baseline;justify-content:space-between;gap:24px;padding:4px 0;font-family:'DM Mono',monospace;}
+.rr .rl{font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text2);font-weight:500;}
+.rr .rv{font-size:14px;font-weight:600;text-align:right;white-space:nowrap;}
+.rr-div{height:1px;background:var(--border);margin:6px 0;}
+.rr-div.strong{height:2px;background:var(--border2);margin:8px 0;}
+.rr.final .rl{font-size:15px;font-weight:700;color:var(--text);}
+.rr.final .rv{font-size:21px;font-weight:700;}
+.rr.pos .rv{color:var(--green);}
+.rr.neg .rv{color:var(--red);}
+.recon-note{font-size:11px;color:var(--text3);margin-top:10px;font-style:italic;}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--text);color:var(--bg);padding:10px 18px;border-radius:var(--radius-lg);font-size:13px;font-weight:500;z-index:2000;}
+.toast.err{background:var(--red);}
+::-webkit-scrollbar{width:6px;height:6px;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="app-header">
+    <div>
+      <div class="app-title">
+        <span id="ttl-main">Regnskab</span>
+        <span class="badge" id="ttl-badge">Afrapportering</span>
+        <span id="proj-disp" style="font-weight:400;color:var(--text3);font-size:15px"></span>
+      </div>
+      <small id="hdr-sub">Projektregnskab til fondsafrapportering</small>
+    </div>
+    <div class="header-controls">
+      <div class="lang-toggle">
+        <button class="lang-btn active" id="btn-da" onclick="setLang('da')">DA</button>
+        <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
+      </div>
+      <div class="pill-group" id="year-btns">
+        <button class="pill active" data-y="1">1</button><button class="pill" data-y="2">2</button>
+        <button class="pill" data-y="3">3</button><button class="pill" data-y="4">4</button>
+        <button class="pill" data-y="5">5</button>
+      </div>
+      <div class="pill-group">
+        <button class="pill active" id="btn-dkk" onclick="setCurrency('DKK')">DKK</button>
+        <button class="pill" id="btn-eur" onclick="setCurrency('EUR')">EUR</button>
+      </div>
+      <button class="icon-btn teal" onclick="exportPDF()"><i class="ti ti-file-type-pdf"></i> <span id="lbl-pdf">PDF</span></button>
+      <button class="icon-btn" onclick="exportExcel()"><i class="ti ti-file-spreadsheet"></i> Excel</button>
+      <button class="icon-btn" onclick="shareLink()"><i class="ti ti-link"></i> <span id="lbl-share">Del</span></button>
+    </div>
+  </div>
+
+  <div id="share-wrap"></div>
+
+  <!-- IMPORT -->
+  <div class="import-panel" id="import-panel">
+    <h3><i class="ti ti-file-import"></i> <span id="lbl-impTitle">Importer budget</span></h3>
+    <p id="lbl-impDesc">Indsæt del-linket fra budgetværktøjet, så overføres alle kategorier og budgettal automatisk.</p>
+    <div class="import-row">
+      <input type="text" id="import-url" placeholder="https://.../#d=..."/>
+      <button class="icon-btn teal" onclick="doImport()"><i class="ti ti-download"></i> <span id="lbl-impBtn">Importer</span></button>
+      <button class="icon-btn ghost" onclick="startBlank()"><i class="ti ti-plus"></i> <span id="lbl-impBlank">Start tomt</span></button>
+    </div>
+  </div>
+
+  <!-- GRANT INFO -->
+  <div class="grant-bar" id="grant-bar">
+    <div class="gfield"><label id="lbl-gProj">Projekttitel</label>
+      <input type="text" id="g-proj" oninput="onProj(this.value)" placeholder="Projektets titel"/></div>
+    <div class="gfield"><label id="lbl-gFunder">Bevillingsgiver</label>
+      <input type="text" id="g-funder" placeholder="Fondens navn"/></div>
+    <div class="gfield"><label id="lbl-gRef">Journalnummer</label>
+      <input type="text" id="g-ref" placeholder="Ref./j.nr."/></div>
+    <div class="gfield"><label id="lbl-gGranted">Bevilget beløb (DKK)</label>
+      <input type="number" class="num" id="g-granted" step="1000" placeholder="0" oninput="granted=parseFloat(this.value)||0;updateAll()"/></div>
+    <div class="gfield"><label id="lbl-gFrom">Periode fra</label>
+      <input type="text" id="g-from" placeholder="01.01.2026"/></div>
+    <div class="gfield"><label id="lbl-gTo">Periode til</label>
+      <input type="text" id="g-to" placeholder="31.12.2027"/></div>
+  </div>
+
+  <div class="config-bar">
+    <label id="lbl-eur">1 EUR =</label>
+    <input type="number" id="eur-inp" value="7.4728" step="0.0001" style="width:78px" oninput="eurRate=parseFloat(this.value)||7.4728;updateAll()"/>
+    <span style="font-size:11px;color:var(--text3)">DKK</span>
+    <div class="config-sep"></div>
+    <label id="lbl-oh">Overhead (%)</label>
+    <input type="number" id="oh-inp" value="0" min="0" max="100" step="0.5" style="width:55px" oninput="overheadPct=parseFloat(this.value)||0;updateAll()"/>
+    <div class="config-sep"></div>
+    <label id="lbl-acc">Regnskabsansvarlig</label>
+    <input type="text" id="g-signer" placeholder="Navn" style="width:160px;font-family:'DM Sans',sans-serif;text-align:left"/>
+  </div>
+
+  <div class="summary-grid" id="summary-grid"></div>
+  <div class="sections-wrap" id="sections-wrap"></div>
+
+  <button class="icon-btn ghost" onclick="addSection()" style="width:100%;justify-content:center;padding:11px;border:2px dashed var(--border2);border-radius:var(--radius-xl);margin-bottom:1.25rem">
+    <i class="ti ti-plus"></i> <span id="lbl-addCat">Tilføj kategori</span>
+  </button>
+
+  <div class="cofin-panel" id="cofin-panel"></div>
+
+  <div class="recon" id="recon"></div>
+</div>
+<script>
+// ════════════════════════════════════════════════════
+//  TRANSLATIONS
+// ════════════════════════════════════════════════════
+const T={
+  da:{
+    ttlMain:'Regnskab', ttlBadge:'Afrapportering',
+    hdrSub:'Projektregnskab til fondsafrapportering',
+    pdfLbl:'PDF', shareLbl:'Del',
+    impTitle:'Importer budget',
+    impDesc:'Indsæt del-linket fra budgetværktøjet, så overføres alle kategorier og budgettal automatisk.',
+    impBtn:'Importer', impBlank:'Start tomt',
+    gProj:'Projekttitel', gFunder:'Bevillingsgiver', gRef:'Journalnummer',
+    gGranted:'Bevilget beløb (DKK)', gFrom:'Periode fra', gTo:'Periode til',
+    eur:'1 EUR =', oh:'Overhead (%)', acc:'Regnskabsansvarlig',
+    addCat:'Tilføj kategori', addRow:'Tilføj post',
+    sub:'Underkategori', desc:'Beskrivelse', inst:'Institution',
+    budget:'Budget', actual:'Forbrug', variance:'Afvigelse',
+    total:'I alt', yr:y=>'År '+y, subtotal:'Subtotal',
+    sumBudget:'Budgetteret', sumActual:'Forbrugt', sumVar:'Afvigelse',
+    sumRemaining:'Restbeløb', overhead:'Overhead',
+    cofinTitle:'Medfinansiering', cofinSource:'Finansieringskilde',
+    cofinStatus:'Status', cofinSubtotal:'Medfinansiering i alt',
+    cofinAdd:'Tilføj finansieringskilde', cofinNone:'Ingen medfinansiering registreret',
+    stGranted:'Modtaget', stPending:'Tilsagn', stExpected:'Forventet',
+    reconTitle:'Afstemning',
+    rGranted:'Bevilget beløb', rCofin:'Medfinansiering', rAvailable:'Midler til rådighed',
+    rSpent:'Forbrug i alt', rOverhead:'Overhead', rRemaining:'Restbeløb',
+    rRepay:'Tilbagebetales', rOverspend:'Merforbrug',
+    reconNoteOk:'Restbeløbet er uforbrugte midler pr. regnskabsdatoen.',
+    reconNoteOver:'Forbruget overstiger de tilgængelige midler. Merforbruget er dækket af egne midler.',
+    delCat:'Slet denne kategori og alle dens poster?',
+    newCat:'Ny kategori', newRow:'Ny post',
+    linkCopied:'Link kopieret', copyLink:'Kopiér link',
+    impOk:'Budget importeret', impFail:'Kunne ikke læse linket — kontrollér at det er et del-link fra budgetværktøjet',
+    statement:'Undertegnede erklærer, at regnskabet er aflagt i overensstemmelse med bevillingens formål og vilkår, og at de anførte udgifter er afholdt i projektet.',
+    sigDate:'Dato', sigName:'Regnskabsansvarlig', sigSign:'Underskrift',
+    period:'Regnskabsperiode', funder:'Bevillingsgiver', ref:'Journalnr.',
+    pctUsed:'forbrugt',
+  },
+  en:{
+    ttlMain:'Financial report', ttlBadge:'Accounts',
+    hdrSub:'Project accounts for grant reporting',
+    pdfLbl:'PDF', shareLbl:'Share',
+    impTitle:'Import budget',
+    impDesc:'Paste the share link from the budget tool and all categories and figures transfer automatically.',
+    impBtn:'Import', impBlank:'Start blank',
+    gProj:'Project title', gFunder:'Funder', gRef:'Grant reference',
+    gGranted:'Amount granted (DKK)', gFrom:'Period from', gTo:'Period to',
+    eur:'1 EUR =', oh:'Overhead (%)', acc:'Responsible for accounts',
+    addCat:'Add category', addRow:'Add line',
+    sub:'Subcategory', desc:'Description', inst:'Institution',
+    budget:'Budget', actual:'Spent', variance:'Variance',
+    total:'Total', yr:y=>'Year '+y, subtotal:'Subtotal',
+    sumBudget:'Budgeted', sumActual:'Spent', sumVar:'Variance',
+    sumRemaining:'Remaining', overhead:'Overhead',
+    cofinTitle:'Co-financing', cofinSource:'Funding source',
+    cofinStatus:'Status', cofinSubtotal:'Total co-financing',
+    cofinAdd:'Add funding source', cofinNone:'No co-financing recorded',
+    stGranted:'Received', stPending:'Committed', stExpected:'Expected',
+    reconTitle:'Reconciliation',
+    rGranted:'Amount granted', rCofin:'Co-financing', rAvailable:'Funds available',
+    rSpent:'Total spent', rOverhead:'Overhead', rRemaining:'Remaining balance',
+    rRepay:'To be repaid', rOverspend:'Overspend',
+    reconNoteOk:'The remaining balance is unspent funds as at the reporting date.',
+    reconNoteOver:'Spending exceeds available funds. The overspend is covered by own resources.',
+    delCat:'Delete this category and all its lines?',
+    newCat:'New category', newRow:'New line',
+    linkCopied:'Link copied', copyLink:'Copy link',
+    impOk:'Budget imported', impFail:'Could not read the link - check that it is a share link from the budget tool',
+    statement:'The undersigned confirms that these accounts have been prepared in accordance with the purpose and terms of the grant, and that the costs stated were incurred by the project.',
+    sigDate:'Date', sigName:'Responsible for accounts', sigSign:'Signature',
+    period:'Reporting period', funder:'Funder', ref:'Grant ref.',
+    pctUsed:'used',
+  }
+};
+
+// ════════════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════════════
+let lang='da', currency='DKK', eurRate=7.4728, numYears=1;
+let overheadPct=0, granted=0;
+let categories=[], coFin=[], collapsed={}, coFinCollapsed=false;
+
+const CAT_COLORS=['#185FA5','#0F6E56','#854F0B','#5F5E5A','#534AB7','#7B2D8B','#C0392B','#1A7A4A'];
+const INSTS=['Rigshospitalet','DTU'];
+const COFIN_STATUS=['granted','pending','expected'];
+
+function uid(){return Math.random().toString(36).slice(2,9);}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
+function yrs(){return Array.from({length:numYears},(_,i)=>i+1);}
+
+function mkRow(label,inst){
+  return {id:uid(),label:label||'',inst:inst||'Rigshospitalet',desc:'',budget:{},actual:{}};
+}
+function mkCat(label,color){
+  return {id:uid(),label:label||'',color:color||CAT_COLORS[0],desc:'',rows:[]};
+}
+function mkCoFin(){return {id:uid(),source:'',status:'granted',amounts:{}};}
+
+// ════════════════════════════════════════════════════
+//  FORMAT  (UI uses rich glyphs; PDF has its own ASCII path)
+// ════════════════════════════════════════════════════
+function grp(n){
+  const s=String(Math.abs(Math.round(n)));
+  let o='';
+  for(let i=0;i<s.length;i++){ if(i>0&&(s.length-i)%3===0) o+='.'; o+=s[i]; }
+  return o;
+}
+function toDisp(dkk){ return currency==='EUR' ? dkk/eurRate : dkk; }
+function fmtCur(dkk){
+  const v=Math.round(toDisp(dkk));
+  const neg=v<0;
+  const body=currency==='EUR' ? ('€ '+grp(v)) : (grp(v)+' kr.');
+  return (neg?'-':'')+body;
+}
+function fmtPct(n){
+  if(!isFinite(n)) return '-';
+  return (Math.round(n*10)/10).toString().replace('.',',')+' %';
+}
+
+// ════════════════════════════════════════════════════
+//  CALCULATIONS  (everything stored in DKK)
+// ════════════════════════════════════════════════════
+function rowBud(r,y){ return r.budget[y]||0; }
+function rowAct(r,y){ return r.actual[y]||0; }
+function rowBudTot(r){ let t=0; yrs().forEach(y=>t+=rowBud(r,y)); return t; }
+function rowActTot(r){ let t=0; yrs().forEach(y=>t+=rowAct(r,y)); return t; }
+
+function catBud(c){ let t=0; c.rows.forEach(r=>t+=rowBudTot(r)); return t; }
+function catAct(c){ let t=0; c.rows.forEach(r=>t+=rowActTot(r)); return t; }
+function catBudY(c,y){ let t=0; c.rows.forEach(r=>t+=rowBud(r,y)); return t; }
+function catActY(c,y){ let t=0; c.rows.forEach(r=>t+=rowAct(r,y)); return t; }
+
+function totBud(){ let t=0; categories.forEach(c=>t+=catBud(c)); return t; }
+function totAct(){ let t=0; categories.forEach(c=>t+=catAct(c)); return t; }
+function totBudY(y){ let t=0; categories.forEach(c=>t+=catBudY(c,y)); return t; }
+function totActY(y){ let t=0; categories.forEach(c=>t+=catActY(c,y)); return t; }
+
+function ohBud(){ return overheadPct>0 ? Math.round(totBud()*overheadPct/100) : 0; }
+function ohAct(){ return overheadPct>0 ? Math.round(totAct()*overheadPct/100) : 0; }
+
+function coFinTot(){ let t=0; coFin.forEach(cf=>yrs().forEach(y=>t+=cf.amounts[y]||0)); return t; }
+function coFinY(y){ let t=0; coFin.forEach(cf=>t+=cf.amounts[y]||0); return t; }
+function coFinRowTot(cf){ let t=0; yrs().forEach(y=>t+=cf.amounts[y]||0); return t; }
+
+function available(){ return granted + coFinTot(); }
+function spentTotal(){ return totAct() + ohAct(); }
+function remaining(){ return available() - spentTotal(); }
+
+// ════════════════════════════════════════════════════
+//  VARIANCE HELPERS
+// ════════════════════════════════════════════════════
+// Variance = budget - spent. Positive => underspend (money left).
+function varClass(v){
+  if(Math.abs(v)<1) return 'var-zero';
+  return v<0 ? 'var-over' : 'var-under';
+}
+function varText(v){
+  if(Math.abs(v)<1) return fmtCur(0);
+  return (v>0?'+':'')+fmtCur(v).replace(/^-/,'-');
+}
+
+// ════════════════════════════════════════════════════
+//  LANGUAGE / CURRENCY
+// ════════════════════════════════════════════════════
+function setLang(l){
+  lang=l;
+  document.getElementById('btn-da').classList.toggle('active',l==='da');
+  document.getElementById('btn-en').classList.toggle('active',l==='en');
+  const map={
+    'ttl-main':'ttlMain','ttl-badge':'ttlBadge','hdr-sub':'hdrSub',
+    'lbl-pdf':'pdfLbl','lbl-share':'shareLbl',
+    'lbl-impTitle':'impTitle','lbl-impDesc':'impDesc','lbl-impBtn':'impBtn','lbl-impBlank':'impBlank',
+    'lbl-gProj':'gProj','lbl-gFunder':'gFunder','lbl-gRef':'gRef','lbl-gGranted':'gGranted',
+    'lbl-gFrom':'gFrom','lbl-gTo':'gTo','lbl-eur':'eur','lbl-oh':'oh','lbl-acc':'acc',
+    'lbl-addCat':'addCat',
+  };
+  Object.entries(map).forEach(([id,k])=>{
+    const el=document.getElementById(id); if(el&&T[lang][k]) el.textContent=T[lang][k];
+  });
+  document.title=T[lang].ttlMain;
+  render();
+}
+function setCurrency(c){
+  currency=c;
+  document.getElementById('btn-dkk').classList.toggle('active',c==='DKK');
+  document.getElementById('btn-eur').classList.toggle('active',c==='EUR');
+  updateAll();
+}
+function onProj(v){ document.getElementById('proj-disp').textContent = v?('— '+v):''; }
+
+// ════════════════════════════════════════════════════
+//  IMPORT FROM BUDGET TOOL
+// ════════════════════════════════════════════════════
+const B62='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+function b62dec(s){
+  let n=0n;
+  for(const ch of s){
+    const i=B62.indexOf(ch);
+    if(i<0) throw new Error('bad char');
+    n=n*62n+BigInt(i);
+  }
+  const bytes=[];
+  while(n>0n){ bytes.unshift(Number(n&255n)); n>>=8n; }
+  return new TextDecoder().decode(new Uint8Array(bytes));
+}
+
+function doImport(){
+  const raw=document.getElementById('import-url').value.trim();
+  if(!raw){ toast(T[lang].impFail,true); return; }
+  let state=null;
+  try{
+    if(raw.includes('#d=')){
+      state=JSON.parse(b62dec(raw.split('#d=')[1]));
+    } else if(raw.includes('#state=')){
+      state=JSON.parse(decodeURIComponent(atob(raw.split('#state=')[1])));
+    } else if(raw.trim().startsWith('{')){
+      state=JSON.parse(raw);
+    } else {
+      // bare payload
+      state=JSON.parse(b62dec(raw));
+    }
+  } catch(e){ toast(T[lang].impFail,true); return; }
+  if(!state){ toast(T[lang].impFail,true); return; }
+  applyBudgetState(state);
+  toast(T[lang].impOk);
+}
+
+// Accepts both the compact (v2) and the legacy budget-tool formats
+function applyBudgetState(s){
+  const compact = Array.isArray(s.cats);
+  numYears = s.n || s.numYears || 1;
+  eurRate  = s.e || s.eurRate || 7.4728;
+  overheadPct = s.o || s.overheadPct || 0;
+  const projTitle = s.p || s.projTitle || '';
+
+  const srcCats = compact ? s.cats : (s.categories||[]);
+  categories = srcCats.map(cat=>{
+    const rowsSrc = compact ? (cat.rw||[]) : (cat.rows||[]);
+    return {
+      id: uid(),
+      label: compact ? (cat.lb||'') : (cat.label||''),
+      color: (compact ? cat.co : cat.color) || CAT_COLORS[0],
+      desc:  (compact ? cat.ds : cat.desc) || '',
+      rows: rowsSrc.map(r=>{
+        const bud = compact ? (r.bu||{}) : (r.budget||{});
+        const clean={};
+        Object.entries(bud).forEach(([k,v])=>{ if(v>0) clean[k]=v; });
+        return {
+          id: uid(),
+          label: compact ? (r.lb||'') : (r.label||''),
+          inst:  (compact ? r.in : r.inst) || 'Rigshospitalet',
+          desc:  (compact ? r.ds : r.desc) || '',
+          budget: clean,
+          actual: {},
+        };
+      }).filter(r=>Object.keys(r.budget).length>0 || r.label),
+    };
+  }).filter(c=>c.rows.length>0);
+
+  const srcCf = compact ? (s.cf||[]) : (s.coFin||[]);
+  coFin = srcCf.map(x=>({
+    id: uid(),
+    source: (compact ? x.s : x.source) || '',
+    status: (compact ? x.st : x.status) || 'granted',
+    amounts: (compact ? x.a : x.amounts) || {},
+  }));
+
+  // Default the granted amount to budget incl. overhead minus co-financing
+  const gt = totBud();
+  granted = Math.round(gt*(1+overheadPct/100)) - coFinTot();
+  if(granted<0) granted=0;
+
+  // Sync the UI controls
+  document.getElementById('g-proj').value=projTitle; onProj(projTitle);
+  document.getElementById('g-granted').value=granted||'';
+  document.getElementById('eur-inp').value=eurRate;
+  document.getElementById('oh-inp').value=overheadPct;
+  document.querySelectorAll('#year-btns .pill').forEach(p=>p.classList.toggle('active',+p.dataset.y===numYears));
+  document.getElementById('import-panel').style.display='none';
+  render();
+}
+
+function startBlank(){
+  categories=[
+    {...mkCat(lang==='da'?'Løn':'Salary','#185FA5'), rows:[mkRow(lang==='da'?'Ny post':'New line','Rigshospitalet')]},
+  ];
+  document.getElementById('import-panel').style.display='none';
+  render();
+}
+
+function toast(msg,isErr){
+  const t=document.createElement('div');
+  t.className='toast'+(isErr?' err':'');
+  t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),3000);
+}
+
+// ════════════════════════════════════════════════════
+//  RENDER
+// ════════════════════════════════════════════════════
+function render(){
+  const wrap=document.getElementById('sections-wrap');
+  wrap.innerHTML='';
+  categories.forEach(cat=>wrap.appendChild(buildSection(cat)));
+  buildCoFin();
+  updateAll();
+}
+
+function buildSection(cat){
+  const open=collapsed[cat.id]!==true;
+  const sec=document.createElement('div');
+  sec.className='section'; sec.dataset.catId=cat.id;
+
+  const b=catBud(cat), a=catAct(cat), v=b-a;
+
+  const hdr=document.createElement('div'); hdr.className='section-header';
+  hdr.innerHTML=`
+    <div class="section-dot" style="background:${cat.color}"></div>
+    <div class="section-name">
+      <input class="text-inp" style="font-weight:600;font-size:13px" type="text" value="${esc(cat.label)}"
+        onclick="event.stopPropagation()" onchange="renameCat('${cat.id}',this.value)"/>
+    </div>
+    <div class="section-stats">
+      <div class="stat-pair"><span class="sl">${T[lang].budget}</span><span class="sv" id="cb_${cat.id}">${fmtCur(b)}</span></div>
+      <div class="stat-pair"><span class="sl">${T[lang].actual}</span><span class="sv" id="ca_${cat.id}">${fmtCur(a)}</span></div>
+      <div class="stat-pair"><span class="sl">${T[lang].variance}</span><span class="sv ${varClass(v)}" id="cv_${cat.id}">${varText(v)}</span></div>
+      <button class="icon-btn danger" style="padding:4px 7px" onclick="event.stopPropagation();delSection('${cat.id}')"><i class="ti ti-trash"></i></button>
+      <i class="ti ti-chevron-down chevron ${open?'open':''}" id="chev-${cat.id}"></i>
+    </div>`;
+  hdr.addEventListener('click',()=>toggleSec(cat.id));
+  sec.appendChild(hdr);
+
+  const body=document.createElement('div');
+  body.className='section-body'; body.id='sb-'+cat.id;
+  body.style.display=open?'block':'none';
+  body.appendChild(buildTable(cat));
+
+  const foot=document.createElement('div'); foot.className='section-foot';
+  const btn=document.createElement('button');
+  btn.className='icon-btn ghost'; btn.style.fontSize='11px';
+  btn.innerHTML=`<i class="ti ti-plus"></i> ${T[lang].addRow}`;
+  btn.onclick=()=>addRow(cat.id);
+  foot.appendChild(btn);
+  body.appendChild(foot);
+
+  sec.appendChild(body);
+  return sec;
+}
+
+function buildTable(cat){
+  const yr=yrs();
+  const wrap=document.createElement('div'); wrap.className='tbl-wrap';
+
+  let h='<table><thead>';
+  // Row 1 — year groups + totals group
+  h+=`<tr>
+    <th style="min-width:150px;background:var(--surface2)"></th>
+    <th style="min-width:130px;background:var(--surface2)"></th>
+    <th style="width:92px;background:var(--surface2)"></th>`;
+  yr.forEach(y=>{ h+=`<th colspan="2" class="yr-group">${T[lang].yr(y)}</th>`; });
+  h+=`<th colspan="3" class="tot-group">${T[lang].total}</th></tr>`;
+  // Row 2 — column headers
+  h+=`<tr>
+    <th>${T[lang].sub}</th>
+    <th>${T[lang].desc}</th>
+    <th>${T[lang].inst}</th>`;
+  yr.forEach(()=>{
+    h+=`<th class="r" style="min-width:96px">${T[lang].budget}</th>`;
+    h+=`<th class="r" style="min-width:96px">${T[lang].actual}</th>`;
+  });
+  h+=`<th class="r" style="min-width:96px">${T[lang].budget}</th>
+      <th class="r" style="min-width:96px">${T[lang].actual}</th>
+      <th class="r" style="min-width:96px">${T[lang].variance}</th>
+  </tr></thead><tbody>`;
+
+  cat.rows.forEach(r=>{
+    const rb=rowBudTot(r), ra=rowActTot(r), rv=rb-ra;
+    h+=`<tr class="data-row" data-row-id="${r.id}">
+      <td><input class="text-inp" type="text" value="${esc(r.label)}" onchange="renameRow('${cat.id}','${r.id}',this.value)"/></td>
+      <td><input class="text-inp desc-inp" type="text" placeholder="${T[lang].desc}" value="${esc(r.desc)}" onchange="setRowDesc('${cat.id}','${r.id}',this.value)"/></td>
+      <td><select class="inst-badge" style="border:1px solid var(--border2);cursor:pointer" onchange="setInst('${cat.id}','${r.id}',this.value)">
+        ${INSTS.map(i=>`<option value="${i}"${r.inst===i?' selected':''}>${i}</option>`).join('')}
+      </select></td>`;
+    yr.forEach(y=>{
+      h+=`<td class="bud-cell"><input class="num-inp" type="number" step="1000" placeholder="0" value="${r.budget[y]||''}" onchange="setBud('${cat.id}','${r.id}',${y},this.value)"/></td>`;
+      h+=`<td class="act-cell"><input class="num-inp" type="number" step="1000" placeholder="0" value="${r.actual[y]||''}" onchange="setAct('${cat.id}','${r.id}',${y},this.value)"/></td>`;
+    });
+    h+=`<td class="sum-bud" id="rb_${r.id}">${fmtCur(rb)}</td>
+        <td class="sum-act" id="ra_${r.id}">${fmtCur(ra)}</td>
+        <td class="sum-var ${varClass(rv)}" id="rv_${r.id}">${varText(rv)}</td>
+      <td style="width:28px;text-align:center"><button class="icon-btn danger" style="padding:2px 5px" onclick="delRow('${cat.id}','${r.id}')"><i class="ti ti-x"></i></button></td>
+    </tr>`;
+  });
+
+  // Subtotal
+  h+=`<tr class="subtotal-row"><td colspan="3" style="font-weight:700;padding-left:9px">${T[lang].subtotal} — ${esc(cat.label)}</td>`;
+  yr.forEach(y=>{
+    h+=`<td class="mc" id="sby_${cat.id}_${y}"></td><td class="mc" id="say_${cat.id}_${y}"></td>`;
+  });
+  h+=`<td class="mc" id="sbt_${cat.id}"></td><td class="mc" id="sat_${cat.id}"></td><td class="mc" id="svt_${cat.id}"></td><td></td></tr>`;
+
+  h+='</tbody></table>';
+  wrap.innerHTML=h;
+  return wrap;
+}
+
+function buildCoFin(){
+  const p=document.getElementById('cofin-panel');
+  const yr=yrs();
+  const open=!coFinCollapsed;
+  let h=`<div class="cofin-header" onclick="toggleCoFin()">
+    <i class="ti ti-coins" style="color:#14603A"></i>
+    <span class="cofin-title">${T[lang].cofinTitle}</span>
+    <span class="cofin-badge" id="cf-badge">${fmtCur(coFinTot())}</span>
+    <i class="ti ti-chevron-down chevron ${open?'open':''}" id="cf-chev" style="color:#14603A"></i>
+  </div>
+  <div class="cofin-body" id="cf-body" style="display:${open?'block':'none'}">`;
+
+  if(coFin.length===0){
+    h+=`<div style="padding:18px;text-align:center;color:var(--text3);font-size:12px">${T[lang].cofinNone}</div>`;
+  } else {
+    h+=`<div class="tbl-wrap"><table><thead><tr>
+      <th style="min-width:190px">${T[lang].cofinSource}</th>
+      <th style="width:110px">${T[lang].cofinStatus}</th>`;
+    yr.forEach(y=>{ h+=`<th class="r" style="min-width:110px">${T[lang].yr(y)}</th>`; });
+    h+=`<th class="r" style="min-width:100px">${T[lang].total}</th><th style="width:30px"></th></tr></thead><tbody>`;
+    coFin.forEach(cf=>{
+      h+=`<tr class="data-row">
+        <td><input class="text-inp" type="text" value="${esc(cf.source)}" onchange="setCfSource('${cf.id}',this.value)"/></td>
+        <td><select class="inst-badge" style="border:1px solid var(--border2);cursor:pointer" onchange="setCfStatus('${cf.id}',this.value)">
+          ${COFIN_STATUS.map(s=>`<option value="${s}"${cf.status===s?' selected':''}>${stLabel(s)}</option>`).join('')}
+        </select></td>`;
+      yr.forEach(y=>{
+        h+=`<td style="text-align:right"><input class="num-inp" type="number" step="1000" placeholder="0" value="${cf.amounts[y]||''}" onchange="setCfAmt('${cf.id}',${y},this.value)"/></td>`;
+      });
+      h+=`<td class="sum-act" id="cft_${cf.id}">${fmtCur(coFinRowTot(cf))}</td>
+        <td style="text-align:center"><button class="icon-btn danger" style="padding:2px 5px" onclick="delCf('${cf.id}')"><i class="ti ti-x"></i></button></td></tr>`;
+    });
+    h+=`<tr class="cofin-subtotal"><td colspan="2" style="font-weight:700;padding-left:9px">${T[lang].cofinSubtotal}</td>`;
+    yr.forEach(y=>{ h+=`<td class="mc" id="cfy_${y}"></td>`; });
+    h+=`<td class="mc" id="cf-tot"></td><td></td></tr>`;
+    h+='</tbody></table></div>';
+  }
+  h+=`<div class="cofin-foot"><button class="icon-btn ghost" style="font-size:11px;color:#14603A" onclick="addCf()"><i class="ti ti-plus"></i> ${T[lang].cofinAdd}</button></div></div>`;
+  p.innerHTML=h;
+}
+
+function stLabel(s){
+  return s==='pending'?T[lang].stPending : s==='expected'?T[lang].stExpected : T[lang].stGranted;
+}
+
+// ════════════════════════════════════════════════════
+//  UPDATE (no re-render)
+// ════════════════════════════════════════════════════
+function updateAll(){
+  const yr=yrs();
+  const tb=totBud(), ta=totAct();
+  const ob=ohBud(), oa=ohAct();
+  const grandBud=tb+ob, grandAct=ta+oa;
+  const cf=coFinTot(), avail=available(), rem=remaining();
+
+  // Summary cards
+  const sg=document.getElementById('summary-grid'); sg.innerHTML='';
+  const pct = grandBud>0 ? (grandAct/grandBud*100) : 0;
+  const cards=[
+    {cls:'accent-budget', lbl:T[lang].sumBudget, val:fmtCur(grandBud), sub:''},
+    {cls:'accent-spent',  lbl:T[lang].sumActual, val:fmtCur(grandAct), sub:fmtPct(pct)+' '+T[lang].pctUsed},
+    {cls:(grandBud-grandAct)<0?'accent-var-over':'accent-var-ok', lbl:T[lang].sumVar,
+     val:varText(grandBud-grandAct), sub:''},
+    {cls:rem<0?'accent-var-over':'accent-var-ok', lbl:T[lang].sumRemaining, val:fmtCur(rem), sub:''},
+  ];
+  cards.forEach(c=>{
+    const d=document.createElement('div'); d.className='metric '+c.cls;
+    d.innerHTML=`<div class="metric-label">${c.lbl}</div><div class="metric-value">${c.val}</div>`+
+      (c.sub?`<div class="metric-sub">${c.sub}</div>`:'');
+    sg.appendChild(d);
+  });
+
+  // Per-category
+  categories.forEach(cat=>{
+    const b=catBud(cat), a=catAct(cat), v=b-a;
+    setTxt('cb_'+cat.id, fmtCur(b));
+    setTxt('ca_'+cat.id, fmtCur(a));
+    const el=document.getElementById('cv_'+cat.id);
+    if(el){ el.textContent=varText(v); el.className='sv '+varClass(v); }
+
+    cat.rows.forEach(r=>{
+      const rb=rowBudTot(r), ra=rowActTot(r), rv=rb-ra;
+      setTxt('rb_'+r.id, fmtCur(rb));
+      setTxt('ra_'+r.id, fmtCur(ra));
+      const ev=document.getElementById('rv_'+r.id);
+      if(ev){ ev.textContent=varText(rv); ev.className='sum-var '+varClass(rv); }
+    });
+    yr.forEach(y=>{
+      setTxt(`sby_${cat.id}_${y}`, fmtCur(catBudY(cat,y)));
+      setTxt(`say_${cat.id}_${y}`, fmtCur(catActY(cat,y)));
+    });
+    setTxt('sbt_'+cat.id, fmtCur(b));
+    setTxt('sat_'+cat.id, fmtCur(a));
+    const sv=document.getElementById('svt_'+cat.id);
+    if(sv){ sv.textContent=varText(v); sv.className='mc '+varClass(v); }
+  });
+
+  // Co-financing
+  coFin.forEach(c=>setTxt('cft_'+c.id, fmtCur(coFinRowTot(c))));
+  yr.forEach(y=>setTxt('cfy_'+y, fmtCur(coFinY(y))));
+  setTxt('cf-tot', fmtCur(cf));
+  setTxt('cf-badge', fmtCur(cf));
+
+  buildRecon(grandAct, cf, avail, rem, oa);
+}
+
+function setTxt(id,v){ const e=document.getElementById(id); if(e) e.textContent=v; }
+
+function buildRecon(grandAct, cf, avail, rem, oa){
+  const el=document.getElementById('recon');
+  const over = rem < 0;
+  let h=`<h3>${T[lang].reconTitle}</h3>`;
+  h+=`<div class="rr"><span class="rl">${T[lang].rGranted}</span><span class="rv">${fmtCur(granted)}</span></div>`;
+  if(cf>0) h+=`<div class="rr"><span class="rl">+ ${T[lang].rCofin}</span><span class="rv">${fmtCur(cf)}</span></div>`;
+  h+=`<div class="rr-div"></div>`;
+  h+=`<div class="rr"><span class="rl">${T[lang].rAvailable}</span><span class="rv">${fmtCur(avail)}</span></div>`;
+  h+=`<div class="rr-div"></div>`;
+  h+=`<div class="rr"><span class="rl">- ${T[lang].rSpent}</span><span class="rv">${fmtCur(totAct())}</span></div>`;
+  if(oa>0) h+=`<div class="rr"><span class="rl">- ${T[lang].rOverhead} (${overheadPct} %)</span><span class="rv">${fmtCur(oa)}</span></div>`;
+  h+=`<div class="rr-div strong"></div>`;
+  h+=`<div class="rr final ${over?'neg':'pos'}"><span class="rl">${over?T[lang].rOverspend:T[lang].rRemaining}</span><span class="rv">${fmtCur(Math.abs(rem))}</span></div>`;
+  h+=`<div class="recon-note">${over?T[lang].reconNoteOver:T[lang].reconNoteOk}</div>`;
+  el.innerHTML=h;
+}
+
+// ════════════════════════════════════════════════════
+//  EDIT HANDLERS
+// ════════════════════════════════════════════════════
+function findCat(id){ return categories.find(c=>c.id===id); }
+function findRow(cid,rid){ const c=findCat(cid); return c&&c.rows.find(r=>r.id===rid); }
+
+function setBud(cid,rid,y,v){ const r=findRow(cid,rid); if(r){ r.budget[y]=parseFloat(v)||0; updateAll(); } }
+function setAct(cid,rid,y,v){ const r=findRow(cid,rid); if(r){ r.actual[y]=parseFloat(v)||0; updateAll(); } }
+function setRowDesc(cid,rid,v){ const r=findRow(cid,rid); if(r) r.desc=v; }
+function setInst(cid,rid,v){ const r=findRow(cid,rid); if(r) r.inst=v; }
+function renameRow(cid,rid,v){ const r=findRow(cid,rid); if(r) r.label=v; }
+function renameCat(cid,v){ const c=findCat(cid); if(c){ c.label=v; render(); } }
+function addRow(cid){ const c=findCat(cid); if(c){ c.rows.push(mkRow(T[lang].newRow,'Rigshospitalet')); render(); } }
+function delRow(cid,rid){ const c=findCat(cid); if(c){ c.rows=c.rows.filter(r=>r.id!==rid); render(); } }
+function delSection(cid){ if(!confirm(T[lang].delCat)) return; categories=categories.filter(c=>c.id!==cid); render(); }
+function addSection(){
+  categories.push({...mkCat(T[lang].newCat, CAT_COLORS[categories.length%CAT_COLORS.length]),
+    rows:[mkRow(T[lang].newRow,'Rigshospitalet')]});
+  render();
+}
+function toggleSec(cid){
+  const open=collapsed[cid]!==true; collapsed[cid]=open;
+  const b=document.getElementById('sb-'+cid), c=document.getElementById('chev-'+cid);
+  if(b) b.style.display=open?'none':'block';
+  if(c) c.classList.toggle('open',!open);
+}
+function toggleCoFin(){
+  coFinCollapsed=!coFinCollapsed;
+  const b=document.getElementById('cf-body'), c=document.getElementById('cf-chev');
+  if(b) b.style.display=coFinCollapsed?'none':'block';
+  if(c) c.classList.toggle('open',!coFinCollapsed);
+}
+function addCf(){ coFin.push(mkCoFin()); buildCoFin(); updateAll(); }
+function delCf(id){ coFin=coFin.filter(c=>c.id!==id); buildCoFin(); updateAll(); }
+function setCfSource(id,v){ const c=coFin.find(x=>x.id===id); if(c) c.source=v; }
+function setCfStatus(id,v){ const c=coFin.find(x=>x.id===id); if(c) c.status=v; }
+function setCfAmt(id,y,v){ const c=coFin.find(x=>x.id===id); if(c){ c.amounts[y]=parseFloat(v)||0; updateAll(); } }
+
+document.getElementById('year-btns').addEventListener('click',e=>{
+  const b=e.target.closest('.pill'); if(!b||!b.dataset.y) return;
+  numYears=parseInt(b.dataset.y);
+  document.querySelectorAll('#year-btns .pill').forEach(p=>p.classList.toggle('active',+p.dataset.y===numYears));
+  render();
+});
+
+// ════════════════════════════════════════════════════
+//  PDF EXPORT
+//  Uses the same ASCII-safe pipeline as the budget tool: jsPDF's built-in
+//  fonts are WinAnsi-encoded, so one character outside that table (U+2212
+//  minus, U+00A0 nbsp, euro sign) makes jsPDF encode the whole word as
+//  UTF-16 and render it as a stray quote plus spaced-out digits.
+// ════════════════════════════════════════════════════
+function hexToRgb(h){ return [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)]; }
+
+function exportPDF(){
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+  const yr=yrs();
+  const isDa=lang==='da';
+  const isEUR=currency==='EUR';
+  const curLbl=isEUR?'EUR':'DKK';
+
+  // ---- ASCII guards ----
+  function pdfTxt(s){
+    return String(s==null?'':s)
+      .replace(/−/g,'-')
+      .replace(/ | /g,' ')
+      .replace(/[‐-―]/g,'-')
+      .replace(/[‘’‚]/g,"'")
+      .replace(/[“”„]/g,'"')
+      .replace(/…/g,'...')
+      .replace(/·|•/g,'-')
+      .replace(/≈/g,'~')
+      .replace(/€/g,'EUR')
+      .replace(/[^\n\x20-\x7E\xA1-\xFF]/g,'');
+  }
+  function pv(dkk){ return isEUR ? Math.round(dkk/eurRate) : Math.round(dkk); }
+  function pfmt(dkk){
+    const v=pv(dkk);
+    return (v<0?'-':'')+(isEUR ? ('EUR '+grp(v)) : (grp(v)+' kr.'));
+  }
+  function pnum(dkk){ const v=pv(dkk); return (v<0?'-':'')+grp(v); }
+  function pvar(dkk){
+    const v=pv(dkk);
+    if(Math.abs(v)<1) return '0';
+    return (v>0?'+':'-')+grp(v);
+  }
+
+  const FS=8, ROW_H=6.4, HEAD_H=7.4, PAD=[1.8,2.5];
+  const TEAL=[15,94,92], TEAL_L=[228,241,240], TEAL_M=[194,224,222];
+  const BLUE=[26,86,176], BLUE_T=[214,228,247], BLUE_L=[235,245,255];
+  const GREEN=[20,96,58], GREEN_L=[230,245,237];
+  const RED=[192,57,43],  RED_L=[253,236,234];
+  const DARK=[28,27,24],  GREY=[107,104,96];
+  const PAGE_W=297, M=8, W=PAGE_W-2*M; // 281mm
+
+  function sanitizeCell(d){
+    if(Array.isArray(d.cell.text)) d.cell.text=d.cell.text.map(t=>pdfTxt(t));
+    else if(typeof d.cell.text==='string') d.cell.text=pdfTxt(d.cell.text);
+    d.cell.styles.fontSize=FS;
+    d.cell.styles.valign='middle';
+  }
+  const baseStyles={font:'helvetica',fontSize:FS,cellPadding:PAD,
+    lineColor:[214,212,204],lineWidth:0.2,textColor:DARK,
+    overflow:'linebreak',valign:'middle',minCellHeight:ROW_H};
+
+  // ── Page header ──
+  const proj   = document.getElementById('g-proj').value||'';
+  const funder = document.getElementById('g-funder').value||'';
+  const ref    = document.getElementById('g-ref').value||'';
+  const pFrom  = document.getElementById('g-from').value||'';
+  const pTo    = document.getElementById('g-to').value||'';
+  const signer = document.getElementById('g-signer').value||'';
+  const today  = new Date().toLocaleDateString(isDa?'da-DK':'en-GB');
+
+  doc.setFillColor(...TEAL); doc.rect(0,0,PAGE_W,20,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(13); doc.setFont(undefined,'bold');
+  doc.text(pdfTxt(T[lang].ttlMain),M+2,11);
+  if(proj){ doc.setFontSize(9); doc.setFont(undefined,'normal'); doc.text(pdfTxt(proj),M+2,17); }
+  doc.setFontSize(8); doc.setFont(undefined,'normal');
+  doc.text(pdfTxt(today),PAGE_W-M,11,{align:'right'});
+  const meta=[];
+  if(isEUR) meta.push('EUR (1 EUR = '+eurRate+' DKK)');
+  if(overheadPct>0) meta.push('Overhead: '+overheadPct+' %');
+  if(meta.length) doc.text(pdfTxt(meta.join(' | ')),PAGE_W-M,17,{align:'right'});
+
+  let y=25;
+
+  // ── Grant details strip ──
+  const info=[];
+  if(funder) info.push([T[lang].funder, funder]);
+  if(ref)    info.push([T[lang].ref, ref]);
+  if(pFrom||pTo) info.push([T[lang].period, (pFrom||'')+(pTo?(' - '+pTo):'')]);
+  info.push([T[lang].rGranted, pfmt(granted)]);
+  if(info.length){
+    doc.autoTable({
+      body:[info.map(([k,v])=>({content:pdfTxt(k+': ')+pdfTxt(v),
+        styles:{halign:'left',fontSize:FS,textColor:DARK}}))],
+      startY:y, margin:{left:M,right:M}, tableWidth:W,
+      styles:{...baseStyles, fillColor:TEAL_L, lineColor:TEAL_M, lineWidth:0.2},
+      didParseCell:sanitizeCell,
+    });
+    y=doc.lastAutoTable.finalY+5;
+  }
+
+  // ── Category tables: Sub | Desc | Inst | Budget | Spent | Variance ──
+  const SUB=52, DESC=58, INST=24;
+  const VALW=Math.floor((W-SUB-DESC-INST)/3);
+  const LASTW=W-SUB-DESC-INST-VALW*2;
+
+  categories.forEach(cat=>{
+    const rows=cat.rows.filter(r=>rowBudTot(r)>0||rowActTot(r)>0);
+    if(!rows.length) return;
+    if(y+16+rows.length*7>190){ doc.addPage(); y=12; }
+
+    doc.setFillColor(...hexToRgb(cat.color));
+    doc.rect(M,y,W,7,'F');
+    doc.setTextColor(255,255,255); doc.setFontSize(9); doc.setFont(undefined,'bold');
+    doc.text(pdfTxt((cat.label||'').toUpperCase()),M+3,y+5);
+    y+=7;
+
+    const head=[[
+      {content:T[lang].sub,     styles:{halign:'left'}},
+      {content:T[lang].desc,    styles:{halign:'left'}},
+      {content:T[lang].inst,    styles:{halign:'center'}},
+      {content:T[lang].budget+' ('+curLbl+')', styles:{halign:'right'}},
+      {content:T[lang].actual+' ('+curLbl+')', styles:{halign:'right'}},
+      {content:T[lang].variance,styles:{halign:'right'}},
+    ]];
+    const body=[];
+    rows.forEach(r=>{
+      const b=rowBudTot(r), a=rowActTot(r), v=b-a;
+      body.push([
+        {content:r.label||'-',   styles:{halign:'left'}},
+        {content:r.desc||'',     styles:{halign:'left',fontStyle:'italic',textColor:GREY}},
+        {content:r.inst||'',     styles:{halign:'center'}},
+        {content:pfmt(b),        styles:{halign:'right'}},
+        {content:pfmt(a),        styles:{halign:'right'}},
+        {content:pvar(v),        styles:{halign:'right',
+          textColor: Math.abs(pv(v))<1?GREY : (v<0?RED:GREEN)}},
+      ]);
+    });
+    const cb=catBud(cat), ca=catAct(cat), cv=cb-ca;
+    body.push([
+      {content:T[lang].subtotal+' - '+(cat.label||''), colSpan:3,
+       styles:{fontStyle:'bold',fillColor:BLUE_T,textColor:DARK,halign:'left'}},
+      {content:pfmt(cb),styles:{fontStyle:'bold',fillColor:BLUE_T,halign:'right',textColor:DARK}},
+      {content:pfmt(ca),styles:{fontStyle:'bold',fillColor:BLUE_T,halign:'right',textColor:DARK}},
+      {content:pvar(cv),styles:{fontStyle:'bold',fillColor:BLUE_T,halign:'right',
+        textColor: Math.abs(pv(cv))<1?DARK : (cv<0?RED:GREEN)}},
+    ]);
+
+    doc.autoTable({
+      head, body, startY:y, margin:{left:M,right:M}, tableWidth:W,
+      styles:baseStyles,
+      headStyles:{fillColor:BLUE,textColor:[255,255,255],fontStyle:'bold',
+        fontSize:FS,minCellHeight:HEAD_H,valign:'middle'},
+      columnStyles:{
+        0:{cellWidth:SUB,halign:'left'},
+        1:{cellWidth:DESC,halign:'left',fontStyle:'italic',textColor:GREY},
+        2:{cellWidth:INST,halign:'center'},
+        3:{cellWidth:VALW,halign:'right'},
+        4:{cellWidth:VALW,halign:'right'},
+        5:{cellWidth:LASTW,halign:'right'},
+      },
+      didParseCell(d){
+        sanitizeCell(d);
+        if(d.section==='body'&&d.row.index<body.length-1&&d.row.index%2===1)
+          d.cell.styles.fillColor=[250,250,248];
+      },
+    });
+    y=doc.lastAutoTable.finalY+5;
+  });
+
+  // ── Per-year breakdown (only when the project spans several years) ──
+  if(numYears>1){
+    const activeCats=categories.filter(c=>catBud(c)>0||catAct(c)>0);
+    if(activeCats.length){
+      if(y+16+activeCats.length*7>190){ doc.addPage(); y=12; }
+      doc.setFillColor(...BLUE); doc.rect(M,y,W,7,'F');
+      doc.setTextColor(255,255,255); doc.setFontSize(9); doc.setFont(undefined,'bold');
+      doc.text(pdfTxt((isDa?'FORDELING PR. AAR':'BREAKDOWN BY YEAR')+'  ('+curLbl+')'),M+3,y+5);
+      y+=7;
+
+      const h1=[{content:isDa?'Kategori':'Category',rowSpan:2,styles:{halign:'left',valign:'middle'}}];
+      yr.forEach(yy=>h1.push({content:T[lang].yr(yy),colSpan:2,
+        styles:{halign:'center',fillColor:[195,215,245],textColor:[12,45,100]}}));
+      h1.push({content:T[lang].total,colSpan:2,styles:{halign:'center',fillColor:TEAL_M,textColor:TEAL}});
+      const h2=[];
+      yr.forEach(()=>{ h2.push({content:T[lang].budget,styles:{halign:'right'}});
+                       h2.push({content:T[lang].actual,styles:{halign:'right'}}); });
+      h2.push({content:T[lang].budget,styles:{halign:'right'}});
+      h2.push({content:T[lang].actual,styles:{halign:'right'}});
+
+      const yb=[];
+      activeCats.forEach(cat=>{
+        const row=[{content:cat.label||'',styles:{halign:'left'}}];
+        yr.forEach(yy=>{
+          row.push({content:pnum(catBudY(cat,yy)),styles:{halign:'right'}});
+          row.push({content:pnum(catActY(cat,yy)),styles:{halign:'right'}});
+        });
+        row.push({content:pnum(catBud(cat)),styles:{halign:'right',fontStyle:'bold'}});
+        row.push({content:pnum(catAct(cat)),styles:{halign:'right',fontStyle:'bold'}});
+        yb.push(row);
+      });
+      const trow=[{content:isDa?'I ALT':'TOTAL',
+        styles:{halign:'left',fontStyle:'bold',fillColor:BLUE_T,textColor:DARK}}];
+      yr.forEach(yy=>{
+        trow.push({content:pnum(totBudY(yy)),styles:{halign:'right',fontStyle:'bold',fillColor:BLUE_T}});
+        trow.push({content:pnum(totActY(yy)),styles:{halign:'right',fontStyle:'bold',fillColor:BLUE_T}});
+      });
+      trow.push({content:pnum(totBud()),styles:{halign:'right',fontStyle:'bold',fillColor:BLUE_T}});
+      trow.push({content:pnum(totAct()),styles:{halign:'right',fontStyle:'bold',fillColor:BLUE_T}});
+      yb.push(trow);
+
+      const nCols=yr.length*2+2;
+      const catW=Math.max(40, W-nCols*Math.floor((W-40)/nCols));
+      const colW=Math.floor((W-catW)/nCols);
+      const lastAdj=W-catW-colW*nCols;
+      const ycs={0:{cellWidth:catW,halign:'left'}};
+      for(let i=0;i<nCols;i++) ycs[i+1]={cellWidth:(i===nCols-1?colW+lastAdj:colW),halign:'right'};
+
+      doc.autoTable({
+        head:[h1,h2], body:yb, startY:y, margin:{left:M,right:M}, tableWidth:W,
+        styles:baseStyles,
+        headStyles:{fillColor:BLUE,textColor:[255,255,255],fontStyle:'bold',
+          fontSize:FS,minCellHeight:HEAD_H,valign:'middle'},
+        columnStyles:ycs,
+        didParseCell(d){
+          sanitizeCell(d);
+          if(d.section==='body'&&d.row.index<yb.length-1&&d.row.index%2===1)
+            d.cell.styles.fillColor=[250,250,248];
+        },
+      });
+      y=doc.lastAutoTable.finalY+5;
+    }
+  }
+
+  // ── Co-financing ──
+  const cfRows=coFin.filter(c=>coFinRowTot(c)>0);
+  if(cfRows.length){
+    if(y+16+cfRows.length*7>190){ doc.addPage(); y=12; }
+    doc.setFillColor(...GREEN); doc.rect(M,y,W,7,'F');
+    doc.setTextColor(255,255,255); doc.setFontSize(9); doc.setFont(undefined,'bold');
+    doc.text(pdfTxt(T[lang].cofinTitle.toUpperCase()),M+3,y+5);
+    y+=7;
+
+    const ch=[[{content:T[lang].cofinSource,styles:{halign:'left'}},
+               {content:T[lang].cofinStatus,styles:{halign:'center'}}]];
+    yr.forEach(yy=>ch[0].push({content:T[lang].yr(yy),styles:{halign:'right',fillColor:[197,229,211],textColor:GREEN}}));
+    ch[0].push({content:T[lang].total,styles:{halign:'right'}});
+
+    const cbody=[];
+    cfRows.forEach(c=>{
+      const row=[{content:c.source||'-',styles:{halign:'left'}},
+                 {content:stLabel(c.status),styles:{halign:'center'}}];
+      yr.forEach(yy=>row.push({content:(c.amounts[yy]||0)>0?pfmt(c.amounts[yy]):'-',styles:{halign:'right'}}));
+      row.push({content:pfmt(coFinRowTot(c)),styles:{halign:'right',fontStyle:'bold'}});
+      cbody.push(row);
+    });
+    const cs=[{content:T[lang].cofinSubtotal,colSpan:2,
+      styles:{fontStyle:'bold',fillColor:[197,229,211],textColor:GREEN,halign:'left'}}];
+    yr.forEach(yy=>cs.push({content:pfmt(coFinY(yy)),
+      styles:{fontStyle:'bold',fillColor:[197,229,211],halign:'right',textColor:GREEN}}));
+    cs.push({content:pfmt(coFinTot()),
+      styles:{fontStyle:'bold',fillColor:[197,229,211],halign:'right',textColor:GREEN}});
+    cbody.push(cs);
+
+    const CFS=26, CFT=34;
+    let cvw=Math.floor((W-80-CFS-CFT)/yr.length);
+    if(cvw>40) cvw=40;
+    const cfsrc=W-CFS-CFT-cvw*yr.length;
+    const ccs={0:{cellWidth:cfsrc,halign:'left'},1:{cellWidth:CFS,halign:'center'}};
+    yr.forEach((_,i)=>ccs[i+2]={cellWidth:cvw,halign:'right'});
+    ccs[yr.length+2]={cellWidth:CFT,halign:'right',fontStyle:'bold'};
+
+    doc.autoTable({
+      head:ch, body:cbody, startY:y, margin:{left:M,right:M}, tableWidth:W,
+      styles:{...baseStyles,lineColor:[157,201,174]},
+      headStyles:{fillColor:GREEN,textColor:[255,255,255],fontStyle:'bold',
+        fontSize:FS,minCellHeight:HEAD_H,valign:'middle'},
+      columnStyles:ccs,
+      didParseCell(d){
+        sanitizeCell(d);
+        if(d.section==='body'&&d.row.index<cbody.length-1&&d.row.index%2===1)
+          d.cell.styles.fillColor=[245,251,247];
+      },
+    });
+    y=doc.lastAutoTable.finalY+5;
+  }
+
+  // ── Reconciliation ──
+  const cfT=coFinTot(), avail=available(), oa=ohAct(), rem=remaining();
+  if(y+50>195){ doc.addPage(); y=12; }
+  y+=2;
+  doc.setFillColor(...TEAL); doc.rect(M,y,W,7,'F');
+  doc.setTextColor(255,255,255); doc.setFontSize(9); doc.setFont(undefined,'bold');
+  doc.text(pdfTxt(T[lang].reconTitle.toUpperCase()),M+3,y+5);
+  y+=7;
+
+  const rb=[];
+  rb.push([{content:T[lang].rGranted,styles:{halign:'left'}},{content:pfmt(granted),styles:{halign:'right'}}]);
+  if(cfT>0) rb.push([{content:'+ '+T[lang].rCofin,styles:{halign:'left'}},{content:pfmt(cfT),styles:{halign:'right'}}]);
+  rb.push([{content:T[lang].rAvailable,styles:{halign:'left',fontStyle:'bold',fillColor:TEAL_L}},
+           {content:pfmt(avail),styles:{halign:'right',fontStyle:'bold',fillColor:TEAL_L}}]);
+  rb.push([{content:'- '+T[lang].rSpent,styles:{halign:'left'}},{content:pfmt(totAct()),styles:{halign:'right'}}]);
+  if(oa>0) rb.push([{content:'- '+T[lang].rOverhead+' ('+overheadPct+' %)',styles:{halign:'left'}},
+                    {content:pfmt(oa),styles:{halign:'right'}}]);
+  const over=rem<0;
+  rb.push([
+    {content:(over?T[lang].rOverspend:T[lang].rRemaining).toUpperCase(),
+     styles:{halign:'left',fontStyle:'bold',fillColor:over?RED_L:GREEN_L,textColor:over?RED:GREEN}},
+    {content:pfmt(Math.abs(rem)),
+     styles:{halign:'right',fontStyle:'bold',fillColor:over?RED_L:GREEN_L,textColor:over?RED:GREEN}},
+  ]);
+
+  doc.autoTable({
+    body:rb, startY:y, margin:{left:M,right:M}, tableWidth:W,
+    styles:{...baseStyles,lineColor:TEAL_M,lineWidth:0.25},
+    columnStyles:{0:{cellWidth:W-70,halign:'left'},1:{cellWidth:70,halign:'right'}},
+    didParseCell:sanitizeCell,
+  });
+  y=doc.lastAutoTable.finalY+8;
+
+  // ── Declaration + signature ──
+  if(y+32>198){ doc.addPage(); y=14; }
+  doc.setTextColor(...DARK); doc.setFontSize(8); doc.setFont(undefined,'normal');
+  const stLines=doc.splitTextToSize(pdfTxt(T[lang].statement),W-4);
+  doc.text(stLines,M+2,y);
+  y+=stLines.length*4+12;
+
+  doc.setDrawColor(...GREY); doc.setLineWidth(0.3);
+  const colW2=(W-20)/2;
+  doc.line(M+2,y,M+2+colW2-10,y);
+  doc.line(M+2+colW2+10,y,M+2+colW2*2,y);
+  doc.setFontSize(7.5); doc.setTextColor(...GREY);
+  doc.text(pdfTxt(T[lang].sigDate+' / '+T[lang].sigName+(signer?(': '+signer):'')),M+2,y+4);
+  doc.text(pdfTxt(T[lang].sigSign),M+2+colW2+10,y+4);
+
+  // ── Page numbers ──
+  const pc=doc.internal.getNumberOfPages();
+  for(let i=1;i<=pc;i++){
+    doc.setPage(i); doc.setFontSize(7); doc.setTextColor(...GREY); doc.setFont(undefined,'normal');
+    doc.text(pdfTxt((isDa?'Side':'Page')+' '+i+' / '+pc),PAGE_W-M,205,{align:'right'});
+  }
+
+  const safe=(proj||'regnskab').replace(/[^a-zA-Z0-9À-ÿ]/g,'_');
+  doc.save((isDa?'Regnskab_':'Financial_report_')+safe+'.pdf');
+}
+
+// ════════════════════════════════════════════════════
+//  EXCEL EXPORT
+// ════════════════════════════════════════════════════
+function exportExcel(){
+  const yr=yrs(), isDa=lang==='da';
+  const isEUR=currency==='EUR';
+  const cl=isEUR?'EUR':'DKK';
+  const v=d=>isEUR?Math.round(d/eurRate):Math.round(d);
+
+  const proj=document.getElementById('g-proj').value||'';
+  const funder=document.getElementById('g-funder').value||'';
+  const ref=document.getElementById('g-ref').value||'';
+  const pFrom=document.getElementById('g-from').value||'';
+  const pTo=document.getElementById('g-to').value||'';
+
+  const wb=XLSX.utils.book_new();
+  const a=[];
+  a.push([T[lang].ttlMain, proj]);
+  a.push([isDa?'Dato':'Date', new Date().toLocaleDateString(isDa?'da-DK':'en-GB')]);
+  if(funder) a.push([T[lang].funder, funder]);
+  if(ref)    a.push([T[lang].ref, ref]);
+  if(pFrom||pTo) a.push([T[lang].period, (pFrom||'')+(pTo?(' - '+pTo):'')]);
+  a.push([T[lang].rGranted+' ('+cl+')', v(granted)]);
+  a.push([]);
+
+  const hdr=[isDa?'Kategori':'Category', T[lang].sub, T[lang].desc, T[lang].inst];
+  yr.forEach(y=>{ hdr.push(T[lang].yr(y)+' '+T[lang].budget+' ('+cl+')');
+                  hdr.push(T[lang].yr(y)+' '+T[lang].actual+' ('+cl+')'); });
+  hdr.push(T[lang].budget+' '+T[lang].total+' ('+cl+')');
+  hdr.push(T[lang].actual+' '+T[lang].total+' ('+cl+')');
+  hdr.push(T[lang].variance+' ('+cl+')');
+  a.push(hdr);
+
+  categories.forEach(cat=>{
+    const rows=cat.rows.filter(r=>rowBudTot(r)>0||rowActTot(r)>0);
+    if(!rows.length) return;
+    rows.forEach((r,i)=>{
+      const line=[i===0?(cat.label||''):'', r.label||'', r.desc||'', r.inst||''];
+      yr.forEach(y=>{ line.push(v(rowBud(r,y))); line.push(v(rowAct(r,y))); });
+      const b=rowBudTot(r), ac=rowActTot(r);
+      line.push(v(b)); line.push(v(ac)); line.push(v(b-ac));
+      a.push(line);
+    });
+    const sub=[(T[lang].subtotal+' - '+(cat.label||'')),'','',''];
+    yr.forEach(y=>{ sub.push(v(catBudY(cat,y))); sub.push(v(catActY(cat,y))); });
+    const cb=catBud(cat), ca=catAct(cat);
+    sub.push(v(cb)); sub.push(v(ca)); sub.push(v(cb-ca));
+    a.push(sub);
+    a.push([]);
+  });
+
+  // Totals
+  const tb=totBud(), ta=totAct(), ob=ohBud(), oa=ohAct();
+  const tot=[isDa?'I ALT (direkte)':'TOTAL (direct)','','',''];
+  yr.forEach(y=>{ tot.push(v(totBudY(y))); tot.push(v(totActY(y))); });
+  tot.push(v(tb)); tot.push(v(ta)); tot.push(v(tb-ta));
+  a.push(tot);
+  if(overheadPct>0){
+    const o=[T[lang].overhead+' ('+overheadPct+' %)','','',''];
+    yr.forEach(()=>{ o.push(''); o.push(''); });
+    o.push(v(ob)); o.push(v(oa)); o.push(v(ob-oa));
+    a.push(o);
+    const g=[isDa?'I ALT INKL. OVERHEAD':'TOTAL INCL. OVERHEAD','','',''];
+    yr.forEach(()=>{ g.push(''); g.push(''); });
+    g.push(v(tb+ob)); g.push(v(ta+oa)); g.push(v((tb+ob)-(ta+oa)));
+    a.push(g);
+  }
+
+  // Co-financing
+  const cfRows=coFin.filter(c=>coFinRowTot(c)>0);
+  if(cfRows.length){
+    a.push([]);
+    a.push([T[lang].cofinTitle.toUpperCase(),'','','']);
+    a.push([T[lang].cofinSource, T[lang].cofinStatus,'','']);
+    cfRows.forEach(c=>{
+      const line=[c.source||'', stLabel(c.status),'',''];
+      yr.forEach(y=>{ line.push(v(c.amounts[y]||0)); line.push(''); });
+      line.push(v(coFinRowTot(c)));
+      a.push(line);
+    });
+    const cs=[T[lang].cofinSubtotal,'','',''];
+    yr.forEach(y=>{ cs.push(v(coFinY(y))); cs.push(''); });
+    cs.push(v(coFinTot()));
+    a.push(cs);
+  }
+
+  // Reconciliation
+  a.push([]);
+  a.push([T[lang].reconTitle.toUpperCase(),'']);
+  a.push([T[lang].rGranted, v(granted)]);
+  if(coFinTot()>0) a.push([T[lang].rCofin, v(coFinTot())]);
+  a.push([T[lang].rAvailable, v(available())]);
+  a.push([T[lang].rSpent, v(totAct())]);
+  if(oa>0) a.push([T[lang].rOverhead+' ('+overheadPct+' %)', v(oa)]);
+  const rem=remaining();
+  a.push([rem<0?T[lang].rOverspend:T[lang].rRemaining, v(Math.abs(rem))]);
+
+  const ws=XLSX.utils.aoa_to_sheet(a);
+  const cols=[{wch:24},{wch:30},{wch:30},{wch:16}];
+  yr.forEach(()=>{ cols.push({wch:17}); cols.push({wch:17}); });
+  cols.push({wch:19},{wch:19},{wch:17});
+  ws['!cols']=cols;
+  XLSX.utils.book_append_sheet(wb,ws,isDa?'Regnskab':'Accounts');
+
+  const out=XLSX.write(wb,{bookType:'xlsx',type:'base64'});
+  const safe=(proj||'regnskab').replace(/[^a-zA-Z0-9À-ÿ]/g,'_');
+  const link=document.createElement('a');
+  link.href='data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,'+out;
+  link.download=(isDa?'Regnskab_':'Financial_report_')+safe+'.xlsx';
+  document.body.appendChild(link); link.click(); document.body.removeChild(link);
+}
+
+// ════════════════════════════════════════════════════
+//  SHARE LINK
+// ════════════════════════════════════════════════════
+function b62enc(str){
+  const bytes=new TextEncoder().encode(str);
+  let n=0n;
+  for(const b of bytes) n=(n<<8n)|BigInt(b);
+  if(n===0n) return '0';
+  let out='';
+  while(n>0n){ out=B62[Number(n%62n)]+out; n/=62n; }
+  return out;
+}
+function gv(id){ return document.getElementById(id).value||''; }
+
+function buildState(){
+  return {
+    v:1, l:lang==='en'?'en':undefined, c:currency==='EUR'?'EUR':undefined,
+    e:eurRate!==7.4728?eurRate:undefined, n:numYears>1?numYears:undefined,
+    o:overheadPct||undefined, g:granted||undefined,
+    meta:{p:gv('g-proj')||undefined,f:gv('g-funder')||undefined,r:gv('g-ref')||undefined,
+          a:gv('g-from')||undefined,b:gv('g-to')||undefined,s:gv('g-signer')||undefined},
+    cats:categories.map(c=>({
+      lb:c.label, co:c.color, ds:c.desc||undefined,
+      rw:c.rows.filter(r=>rowBudTot(r)>0||rowActTot(r)>0||r.label).map(r=>({
+        lb:r.label, in:r.inst!=='Rigshospitalet'?r.inst:undefined, ds:r.desc||undefined,
+        bu:Object.fromEntries(Object.entries(r.budget).filter(([,x])=>x>0)),
+        ac:Object.fromEntries(Object.entries(r.actual).filter(([,x])=>x>0)),
+      })),
+    })),
+    cf:coFin.filter(c=>c.source||coFinRowTot(c)>0).map(c=>({
+      s:c.source||undefined, st:c.status!=='granted'?c.status:undefined,
+      a:Object.fromEntries(Object.entries(c.amounts).filter(([,x])=>x>0)),
+    })),
+  };
+}
+
+function restoreState(s){
+  lang=s.l||'da'; currency=s.c||'DKK';
+  eurRate=s.e||7.4728; numYears=s.n||1;
+  overheadPct=s.o||0; granted=s.g||0;
+  const m=s.meta||{};
+  document.getElementById('g-proj').value=m.p||'';   onProj(m.p||'');
+  document.getElementById('g-funder').value=m.f||'';
+  document.getElementById('g-ref').value=m.r||'';
+  document.getElementById('g-from').value=m.a||'';
+  document.getElementById('g-to').value=m.b||'';
+  document.getElementById('g-signer').value=m.s||'';
+  document.getElementById('g-granted').value=granted||'';
+  document.getElementById('eur-inp').value=eurRate;
+  document.getElementById('oh-inp').value=overheadPct;
+  categories=(s.cats||[]).map(c=>({
+    id:uid(), label:c.lb||'', color:c.co||CAT_COLORS[0], desc:c.ds||'',
+    rows:(c.rw||[]).map(r=>({
+      id:uid(), label:r.lb||'', inst:r.in||'Rigshospitalet', desc:r.ds||'',
+      budget:r.bu||{}, actual:r.ac||{},
+    })),
+  }));
+  coFin=(s.cf||[]).map(c=>({id:uid(),source:c.s||'',status:c.st||'granted',amounts:c.a||{}}));
+  document.querySelectorAll('#year-btns .pill').forEach(p=>p.classList.toggle('active',+p.dataset.y===numYears));
+  document.getElementById('btn-dkk').classList.toggle('active',currency==='DKK');
+  document.getElementById('btn-eur').classList.toggle('active',currency==='EUR');
+  document.getElementById('btn-da').classList.toggle('active',lang==='da');
+  document.getElementById('btn-en').classList.toggle('active',lang==='en');
+  document.getElementById('import-panel').style.display='none';
+}
+
+function shareLink(){
+  const url=location.href.split('#')[0]+'#d='+b62enc(JSON.stringify(buildState()));
+  history.replaceState(null,'',url);
+  document.getElementById('share-wrap').innerHTML=
+    `<div style="display:flex;align-items:center;gap:8px;padding:9px 14px;background:var(--teal-light);
+        border:1px solid var(--teal-mid);border-radius:var(--radius-lg);margin-bottom:1rem;font-size:12px">
+      <i class="ti ti-link" style="color:var(--teal)"></i>
+      <input type="text" id="share-url" readonly value="${esc(url)}" onclick="this.select()"
+        style="flex:1;min-width:0;font-size:11px;padding:4px 8px;border:1px solid var(--border2);
+        border-radius:var(--radius);background:var(--surface);font-family:'DM Mono',monospace"/>
+      <button class="icon-btn" onclick="copyShare()"><i class="ti ti-copy"></i> ${T[lang].copyLink}</button>
+    </div>`;
+}
+function copyShare(){
+  const i=document.getElementById('share-url');
+  i.select();
+  navigator.clipboard.writeText(i.value).then(()=>toast(T[lang].linkCopied))
+    .catch(()=>{ document.execCommand('copy'); toast(T[lang].linkCopied); });
+}
+
+// ════════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════════
+(function init(){
+  const h=location.hash;
+  if(h.startsWith('#d=')){
+    try{
+      restoreState(JSON.parse(b62dec(h.slice(3))));
+      setLang(lang);
+      return;
+    }catch(e){ console.warn('restore failed',e); }
+  }
+  setLang('da');
+})();
+</script>
+</body>
+</html>
